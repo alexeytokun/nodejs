@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Users</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="wrapper">
+    <img src="BWLogo.png">
+    <div id="myModal" class="modal">
+        <form action="http://127.0.0.1:8000/user" method="post" id="userform" autocomplete="off" class='modal-content'>
+            <span class="close">&times;</span>
+            <input id="username" name="username" type="text" placeholder="Name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="surname" name="surname" type="text" placeholder="Surname" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="age" name="age" type="text" placeholder="Age" pattern="[0-9]{1,2}" required>
+            <input id="save" type="button" value="Save">
+        </form>
+    </div>
+    
+    <button class='btn' id="showall">Show all users</button>
+    <button class='btn' id="createuser">Create new user</button>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
