@@ -53,6 +53,16 @@ app.use(function (req, res, next) {
     next();
 });
 
+app.use('/', function(req, res, next) {
+
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "*");
+    res.header("Access-Control-Allow-Methods", "*");
+  
+    next();
+  
+  });
+
 app.post('/user', function (req, res, next) {
     if (!isUnique(req.body.username)) {
         return res.status(406).json({message: 'Not unique username'});
