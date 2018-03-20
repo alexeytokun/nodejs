@@ -37,17 +37,65 @@ saveButton.onclick = function (event) {
 
     var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
         '&pass=' + pass.value + '&role=' + role.value;
-    saveUser(user);
+
+    saveUser(user)
+    .then(
+        function(response) {
+            if (document.getElementById('userstable')) {
+                updateTable()
+                .then(
+                    function(response) {
+                        createTable(response);
+                    }
+                )
+                .catch(
+                    function(response) {
+                        alert(response);
+                    }   
+                )
+                clearForm();
+            }
+        }
+    )
+    .catch(
+        function(response) {
+            alert(response);
+        }   
+    )
+
+    userForm.setAttribute('action', mainUrl + '/user');
     modal.classList.remove('show');
 }
 
 signInButton.onclick = function () {
+
     if (!validateSignIn()) {
         alert('Validation error');
         return;
     }
+
     var userData = 'username=' + si_username.value + '&pass=' + si_password.value;
-    signInUser(userData);
+
+    signInUser(userData)
+    .then(
+        function(response) {
+            signIn.classList.remove('show');
+            authHeader = response.roletoken;
+            idHeader = response.idtoken;
+            return updateTable();
+        }
+    )
+    .then(
+        function(response) {
+            createTable(response);
+        }
+    )
+    .catch(
+        function(response) {
+            alert(response);
+        }
+    )
+
 }
 
 showAll.onclick = function () {
@@ -55,7 +103,17 @@ showAll.onclick = function () {
     if (container) {
         container.parentNode.removeChild(container);
     } else {
-        updateTable();
+        updateTable()
+        .then(
+            function(response) {
+                createTable(response);
+            }
+        )
+        .catch(
+            function(response) {
+                alert(response);
+            }
+        )
     }
 
 }
@@ -98,76 +156,83 @@ signInSwitch.onclick = signUpSwitch.onclick = function () {
 
 function saveUser(user) {
 
-    var url = userForm.getAttribute('action');
-    var XHR = new XMLHttpRequest();
-    XHR.open("POST", url);
-    XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    XHR.setRequestHeader('User-Role-Token', String(authHeader));
-    XHR.setRequestHeader('User-Id-Token', String(idHeader));
-    XHR.send(user);
-    XHR.onload = XHR.onerror = function () {
-        var response = JSON.parse(XHR.response);
-        if (this.status == 200) {
-            if (document.getElementById('userstable')) {
-                updateTable();
-                //alert('User data updated');
+    return new Promise(
+        function (resolve, reject) {
+            var url = userForm.getAttribute('action');
+            var XHR = new XMLHttpRequest();
+            XHR.open("POST", url);
+            XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            XHR.setRequestHeader('User-Role-Token', String(authHeader));
+            XHR.setRequestHeader('User-Id-Token', String(idHeader));
+            XHR.send(user);
+            XHR.onload = XHR.onerror = function () {
+                var response = JSON.parse(XHR.response);
+                if (this.status == 200) {
+                    resolve(response);
+                } else if (this.status == 406) {
+                    reject(response.message);
+                } else {
+                    console.log("Error with status: " + this.status);
+                    reject("Error with status: " + this.status);
+                }
             }
-            clearForm();
-        } else if (this.status == 406) {
-            alert(response.message);
-        } else {
-            alert("Error with status: " + this.status);
-            console.log("Error with status: " + this.status);
         }
-    }
-
-    userForm.setAttribute('action', mainUrl + '/user');
+    )
 }
 
 function signInUser(user) {
 
-    var url = mainUrl + '/signin';
-    var XHR = new XMLHttpRequest();
-    XHR.open("POST", url);
-    XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    XHR.send(user);
-    XHR.onload = XHR.onerror = function () {
-        var response = JSON.parse(XHR.response);
-        if (this.status == 200) {
-            signIn.classList.remove('show');
-            authHeader = response.roletoken;
-            idHeader = response.idtoken;
-            updateTable();
+    return new Promise(
+        function (resolve, reject) {
 
-        } else if (this.status == 406) {
-            alert(response.message);
-        } else {
-            alert("Error with status: " + this.status);
-            console.log("Error with status: " + this.status);
+            var url = mainUrl + '/signin';
+            var XHR = new XMLHttpRequest();
+            XHR.open("POST", url);
+            XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            XHR.send(user);
+            XHR.onload = XHR.onerror = function () {
+                var response = JSON.parse(XHR.response);
+                if (this.status == 200) {
+                    resolve(response);
+                } else if (this.status == 406) {
+                    resolve(response.message);
+                } else {
+                    console.log("Error with status: " + this.status);
+                    resolve("Error with status: " + this.status);
+                }
+            }
         }
-    }
+
+    )
+
 }
 
 function deleteUser(id) {
 
-    var url = mainUrl + '/user/' + id;
-    var XHR = new XMLHttpRequest();
-    XHR.open("DELETE", url);
-    XHR.setRequestHeader('User-Role-Token', String(authHeader));
-    XHR.setRequestHeader('User-Id-Token', String(idHeader));
-    XHR.send();
+    return new Promise(
+        function (resolve, reject) {    
 
-    XHR.onload = XHR.onerror = function () {
-        var response = JSON.parse(XHR.response);
-        if (this.status == 200) {
-            alert(response.message);
-            updateTable();
-        } else if (this.status == 403) {
-            alert(response.message);
-        } else {
-            alert("Error with status: " + this.status);
+            var url = mainUrl + '/user/' + id;
+            var XHR = new XMLHttpRequest();
+            XHR.open("DELETE", url);
+            XHR.setRequestHeader('User-Role-Token', String(authHeader));
+            XHR.setRequestHeader('User-Id-Token', String(idHeader));
+            XHR.send();
+
+            XHR.onload = XHR.onerror = function () {
+                var response = JSON.parse(XHR.response);
+                if (this.status == 200) {
+                    resolve(response.message);
+                } else if (this.status == 403) {
+                    reject(response.message);
+                } else {
+                    reject("Error with status: " + this.status);
+                }
+            }
         }
-    }
+
+    )
+
 }
 
 function editUser(id) {
@@ -251,7 +316,23 @@ function createTable(usersObj) {
         var targetId = +target.parentNode.parentNode.getAttribute('id');
 
         if (target.className == 'del') {
-            deleteUser(targetId);
+            deleteUser(targetId)
+            .then(
+                function(response) {
+                    // alert(response);
+                    return updateTable();
+                }
+            )
+            .then(
+                function(response) {
+                    createTable(response);
+                }
+            )
+            .catch(
+                function (response) {
+                    alert(response);
+                }
+            )
         }
 
         if (target.className == 'edit') {
@@ -267,23 +348,30 @@ function createTable(usersObj) {
 }
 
 function updateTable() {
-    var url = mainUrl + '/users';
-    var XHR = new XMLHttpRequest();
-    XHR.open("GET", url);
-    XHR.setRequestHeader('User-Role-Token', String(authHeader));
-    XHR.setRequestHeader('User-Id-Token', String(idHeader));
-    XHR.send();
-    clearForm();
-    XHR.onload = XHR.onerror = function () {
-        var response = JSON.parse(XHR.response);
-        if (this.status == 200) { 
-            createTable(response);
-        } else if (this.status == 403 ||this.status == 400) {
-            alert(response.message);
-        } else {
-            console.log("Error with status: " + this.status);
+    return new Promise(
+        function (resolve, reject) {
+
+            var url = mainUrl + '/users';
+            var XHR = new XMLHttpRequest();
+            XHR.open("GET", url);
+            XHR.setRequestHeader('User-Role-Token', String(authHeader));
+            XHR.setRequestHeader('User-Id-Token', String(idHeader));
+            XHR.send();
+            clearForm();
+            XHR.onload = XHR.onerror = function () {
+                var res = JSON.parse(XHR.response);
+                if (this.status == 200) {
+                    resolve(res);
+                } else if (this.status == 403 ||this.status == 400) {
+                    reject(res.message);
+                } else {
+                    console.log("Error with status: " + this.status);
+                    reject("Error with status: " + this.status);
+                }
+            }
         }
-    }
+
+    )
 }
 
 function showUserInfo(user) {
