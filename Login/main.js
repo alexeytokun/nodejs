@@ -3,17 +3,29 @@ var app = express();
 var bodyParser = require('body-parser');
 var port = 8000;
 var mysql = require('mysql');
-var usersArr = [];
-var userId;
 
-var connection = mysql.createConnection({
+var pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '123',
-    database: 'newdb'
+    database: 'newdb',
+    connectionLimit: 100
 });
 
-connection.connect(showConnectionStatus);
+var query = function (sql, props) {
+    return new Promise(function (resolve, reject) {
+        pool.getConnection(function (err, connection) {
+            connection.query(
+                sql, props,
+                function (err, res) {
+                    if (err) reject(err);
+                    else resolve(res);
+                }
+            );
+            connection.release();
+        });
+    });
+};
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -21,18 +33,9 @@ app.use(bodyParser.urlencoded({
 }));
 
 function addUserToDb(username, surname, age, pass, role) {
-    return new Promise (
-        function (resolve, reject) {
-            var userData = [username, surname, age, role, pass];
-            var query = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
-            connection.query(query, userData, function (err, results) {
-                if (err) {
-                    throw err;
-                } 
-                resolve (results.insertId);
-            });
-        }
-    )
+    var sql = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
+    var userData = [username, surname, age, role, pass];
+    return query(sql, userData);
 }
 
 function vaidate(data) {
@@ -43,125 +46,71 @@ function vaidate(data) {
     return test;
 }
 
-function login(user) {
+function checkUserData(username, password) {
+    var sql = 'SELECT * FROM `users` WHERE `username` = ? AND `password` = ?';
+    var prop = [username, password];
+    return query(sql, prop);
+}
 
-    return getAllUseres().then(
-        function (results) {
-            for (var obj of results) {
-                if (obj.username === user.username && obj.password === user.pass) {
-                    return obj;
-                }
-            }
-            throw ('Wrong username or password');
-        }
-    )
+function login(user) {
+    return checkUserData(user.username, user.pass).then(function (results) {
+        if (results.length) return results;
+        throw ({ message: 'Wrong username or password' });
+    });
 }
 
 function getAllUseres() {
-    return new Promise( 
-        function (resolve, reject) {
-            connection.query('SELECT * FROM `users`', function (err, results) {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve(results);
-            });
-        }
-    )
+    var sql = 'SELECT * FROM `users`';
+    return query(sql);
 }
 
-function getUsernames() {
-    return new Promise( 
-        function (resolve, reject) {
-            connection.query('SELECT `username` FROM `users`', function (err, results) {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve(results);
-            });
-        }
-    )
+function checkUsername(name) {
+    var sql = 'SELECT `id` FROM `users` WHERE `username` = ?';
+    var prop = [name];
+    return query(sql, prop);
 }
 
 function getUserById(id) {
-    return new Promise( 
-        function (resolve, reject) {
-            connection.query('SELECT * FROM `users` WHERE `id` = ?', id, function (err, results) {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve(results);
-            });
-        }
-    )
+    var sql = 'SELECT * FROM `users` WHERE `id` = ?';
+    var prop = id;
+
+    return query(sql, prop);
 }
 
 function deleteUser(id) {
-    return new Promise( 
-        function (resolve, reject) {
-            connection.query('DELETE FROM `users` WHERE `id` = ?', id, function (err, results) {
-                if (err) {
-                    reject({status: 400, message: err});
-                    return;
-                }
-                if (results.affectedRows !== 0) {
-                    resolve({status: 200, message: 'User deleted'});
-                } else {
-                    resolve({status: 400, message: 'Wrong user id'});
-                }
-            });
-        }
-    )
+    var sql = 'DELETE FROM `users` WHERE `id` = ?';
+    var prop = id;
+
+    return query(sql, prop)
+        .then(function (results) {
+            if (results.affectedRows !== 0) {
+                return ({ status: 200, message: 'User deleted' });
+            }
+            return ({ status: 400, message: 'Wrong user id' });
+        }).catch(function (err) {
+            throw ({ status: 400, message: err });
+        });
 }
 
 function updateUserData(id, data) {
-    return new Promise( 
-        function (resolve, reject) {
-            var query = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=? WHERE id=?';
-            var userData = [data.username, data.surname, data.age, data.role, data.pass, id];
-            connection.query(query, userData, function (err, results) {
-                if (err) {
-                    reject({status: 400, message: err});
-                    return;
-                }
-                if (results.affectedRows !== 0) {
-                    resolve({status: 200, message: 'User data updated'});
-                } else {
-                    resolve({status: 400, message: 'Wrong user id'});
-                } 
-            });
-        }
-    )
+    var sql = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=? WHERE id=?';
+    var prop = [data.username, data.surname, data.age, data.role, data.pass, id];
+    return query(sql, prop)
+        .then(function (results) {
+            if (results.affectedRows !== 0) {
+                return ({ status: 200, message: 'User data updated' });
+            }
+            return ({ status: 400, message: 'Wrong user id' });
+        }).catch(function (err) {
+            throw ({ status: 400, message: err });
+        });
 }
 
 function isUnique(username) {
-
-    return getUsernames().then(
-        function(results) {
-            if (!results.length) return;
-            for (var i = 0; i < results.length; i+=1) {
-                if (results[i].username === username) {
-                    throw ('Not unique username');
-                }
-            }
-            return;
-        }
-    )
-}
-
-function reportWrongId(req, res) {
-    res.status(400).json({ message: 'Wrong user id' });
-}
-
-function showConnectionStatus (err) {
-    if (err){
-        console.log('Not Connected!');
-        return;
-    } 
-    console.log('Connected!');
+    return checkUsername(username).then(function (results) {
+        if (!results.length) return;
+        throw ({ message: 'Not unique username' });
+    });
 }
 
 app.use(function (req, res, next) {
@@ -204,47 +153,34 @@ app.use('/', function (req, res, next) {
 });
 
 app.post('/user', function (req, res, next) {
-    isUnique(req.body.username).then(
-        function() {
-            next();
-        }
-    ).catch(
-        function(result) {
-            return res.status(406).json({ message: result });
-        }
-    )
+    isUnique(req.body.username).then(function () {
+        next();
+    }).catch(function (result) {
+        return res.status(406).json({ message: result.message });
+    });
 }, function (req, res, next) {
     if (vaidate(req.body)) {
         addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role)
-        .then(
-            function (result) {
-                return res.json({ message: result });
-            }
-        ).catch(
-            function () {
+            .then(function (result) {
+                return res.json({ message: result.insertId });
+            }).catch(function () {
                 return next();
-            }
-        );
+            });
     }
-    
 }, function (req, res) {
     res.status(406).json({ message: 'Validation error' });
 });
 
 app.post('/signin', function (req, res, next) {
     login(req.body)
-    .then(
-        function(result){
+        .then(function (result) {
             return res.json({
-                roletoken: result.role,
-                idtoken: result.id
+                roletoken: result[0].role,
+                idtoken: result[0].id
             });
-        }
-    ).catch(
-        function(result) {
-            res.status(406).json({ message: result });
-        }
-    );
+        }).catch(function (result) {
+            res.status(406).json({ message: result.message });
+        });
 });
 
 app.post('/user/:id', function (req, res, next) {
@@ -259,17 +195,12 @@ app.post('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-
     updateUserData(req.params.id, req.body)
-    .then(
-        function(result) {
+        .then(function (result) {
             return res.status(result.status).json({ message: result.message });
-        }
-    ).catch(
-        function (result) {
+        }).catch(function (result) {
             res.status(result.status).json({ message: result.message });
-        }
-    )
+        });
 });
 
 app.get('/user/:id', function (req, res, next) {
@@ -280,21 +211,16 @@ app.get('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-
     getUserById(req.params.id)
-    .then(
-        function (result) {
-            if(result.length) {
-                res.json(result[0]); //???
+        .then(function (result) {
+            if (result.length) {
+                res.json(result[0]);
             } else {
                 res.status(400).json({ message: 'Wrong user id' });
             }
-        }   
-    ).catch(
-        function(result) {
+        }).catch(function (result) {
             res.status(400).json({ message: result });
-        }
-    )
+        });
 });
 
 app.delete('/user/:id', function (req, res, next) {
@@ -303,54 +229,40 @@ app.delete('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-
     deleteUser(req.params.id)
-    .then(
-        function(result) {
+        .then(function (result) {
             return res.status(result.status).json({ message: result.message });
-        }
-    ).catch(
-        function (result) {
+        }).catch(function (result) {
             res.status(result.status).json({ message: result.message });
-        }
-    )
+        });
 });
 
-app.get('/users',  function (req, res, next) {
+app.get('/users', function (req, res, next) {
     if (req.body.token === 'admin' || req.body.token === 'user') {
         getAllUseres()
-        .then(
-            function (results){
-                if(results.length) {
+            .then(function (results) {
+                if (results.length) {
                     return res.json(results);
-                } else {
-                    return res.status(400).json({ message: 'No users created' });
                 }
-            }
-        ).catch(
-            function (result) {
+                return res.status(400).json({ message: 'No users created' });
+            }).catch(function (result) {
                 res.status(400).json({ message: result });
-            }
-        )
+            });
     } else {
         return next();
     }
 }, function (req, res, next) {
     if (req.body.token === 'guest') {
         getUserById(req.body.IdToken)
-        .then(
-            function (result) {
-                if(result.length) {
-                    res.json(result); //???
+            .then(function (result) {
+                if (result.length) {
+                    res.json(result);
                 } else {
                     res.status(400).json({ message: 'Wrong user id' });
                 }
-            }   
-        ).catch(
-            function(result) {
+            }).catch(function (result) {
                 res.status(400).json({ message: result });
-            }
-        )
+            });
     } else {
         return next();
     }
