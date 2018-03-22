@@ -24,13 +24,17 @@ app.use(bodyParser.urlencoded({
 }));
 
 function addUserToDb(username, surname, age, pass, role) {
-    var userData = [username, surname, age, role, pass];
-    var query = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
-    connection.query(query, userData, function (err, results) {
-        if (err) throw err;
-        console.log('User saved');
-        userId = results.insertId;
-    });
+    return new Promise (
+        function (resolve, reject) {
+            var userData = [username, surname, age, role, pass];
+            var query = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
+            connection.query(query, userData, function (err, results) {
+                if (err) throw err;
+                console.log('User saved');
+                resolve (results.insertId);
+            });
+        }
+    )
 }
 
 function vaidate(data) {
@@ -132,17 +136,23 @@ app.post('/user', function (req, res, next) {
         }
     ).catch(
         function(result) {
-            console.log(result);
             return res.status(406).json({ message: result });
         }
     )
 }, function (req, res, next) {
     if (vaidate(req.body)) {
-        addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role);
-        console.log(userId);
-        return res.json({ message: userId }); //нужен промис
+        addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role)
+        .then(
+            function (result) {
+                return res.json({ message: result });
+            }
+        ).catch(
+            function () {
+                return next();
+            }
+        );
     }
-    return next();
+    
 }, function (req, res) {
     res.status(406).json({ message: 'Validation error' });
 });
