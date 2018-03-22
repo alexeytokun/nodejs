@@ -13,10 +13,7 @@ var connection = mysql.createConnection({
     database: 'newdb'
 });
 
-connection.connect(function (err) {
-    if (err) console.log('Not Connected!');
-    console.log('Connected!');
-});
+connection.connect(showConnectionStatus);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -29,8 +26,9 @@ function addUserToDb(username, surname, age, pass, role) {
             var userData = [username, surname, age, role, pass];
             var query = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
             connection.query(query, userData, function (err, results) {
-                if (err) throw err;
-                console.log('User saved');
+                if (err) {
+                    throw err;
+                } 
                 resolve (results.insertId);
             });
         }
@@ -46,22 +44,94 @@ function vaidate(data) {
 }
 
 function login(user) {
-    for (var obj of usersArr) {
-        if (obj !== undefined) {
-            if (obj.username === user.username && obj.pass === user.pass) {
-                return obj;
+
+    return getAllUseres().then(
+        function (results) {
+            for (var obj of results) {
+                if (obj.username === user.username && obj.password === user.pass) {
+                    return obj;
+                }
             }
+            throw ('Wrong username or password');
         }
-    }
-    return false;
+    )
+}
+
+function getAllUseres() {
+    return new Promise( 
+        function (resolve, reject) {
+            connection.query('SELECT * FROM `users`', function (err, results) {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(results);
+            });
+        }
+    )
 }
 
 function getUsernames() {
     return new Promise( 
         function (resolve, reject) {
             connection.query('SELECT `username` FROM `users`', function (err, results) {
-                if (err) reject(err);
+                if (err) {
+                    reject(err);
+                    return;
+                }
                 resolve(results);
+            });
+        }
+    )
+}
+
+function getUserById(id) {
+    return new Promise( 
+        function (resolve, reject) {
+            connection.query('SELECT * FROM `users` WHERE `id` = ?', id, function (err, results) {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(results);
+            });
+        }
+    )
+}
+
+function deleteUser(id) {
+    return new Promise( 
+        function (resolve, reject) {
+            connection.query('DELETE FROM `users` WHERE `id` = ?', id, function (err, results) {
+                if (err) {
+                    reject({status: 400, message: err});
+                    return;
+                }
+                if (results.affectedRows !== 0) {
+                    resolve({status: 200, message: 'User deleted'});
+                } else {
+                    resolve({status: 400, message: 'Wrong user id'});
+                }
+            });
+        }
+    )
+}
+
+function updateUserData(id, data) {
+    return new Promise( 
+        function (resolve, reject) {
+            var query = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=? WHERE id=?';
+            var userData = [data.username, data.surname, data.age, data.role, data.pass, id];
+            connection.query(query, userData, function (err, results) {
+                if (err) {
+                    reject({status: 400, message: err});
+                    return;
+                }
+                if (results.affectedRows !== 0) {
+                    resolve({status: 200, message: 'User data updated'});
+                } else {
+                    resolve({status: 400, message: 'Wrong user id'});
+                } 
             });
         }
     )
@@ -86,6 +156,14 @@ function reportWrongId(req, res) {
     res.status(400).json({ message: 'Wrong user id' });
 }
 
+function showConnectionStatus (err) {
+    if (err){
+        console.log('Not Connected!');
+        return;
+    } 
+    console.log('Connected!');
+}
+
 app.use(function (req, res, next) {
     var body;
     var headerRoleToken;
@@ -94,10 +172,6 @@ app.use(function (req, res, next) {
         body = req.body;
         headerRoleToken = req.headers['user-role-token'];
         headerIdToken = +req.headers['user-id-token'];
-
-        // console.log('Request URL:', req.originalUrl);
-        // console.log('Request Type:', req.method);
-        // console.log('Header: ', headerRoleToken);
 
         switch (headerRoleToken) {
         case 'admin':
@@ -158,21 +232,24 @@ app.post('/user', function (req, res, next) {
 });
 
 app.post('/signin', function (req, res, next) {
-    var user = login(req.body);
-    if (user) {
-        return res.json({
-            roletoken: user.role,
-            idtoken: user.id
-        });
-    }
-    return next();
-}, function (req, res) {
-    res.status(406).json({ message: 'Wrong username or password' });
+    login(req.body)
+    .then(
+        function(result){
+            return res.json({
+                roletoken: result.role,
+                idtoken: result.id
+            });
+        }
+    ).catch(
+        function(result) {
+            res.status(406).json({ message: result });
+        }
+    );
 });
 
 app.post('/user/:id', function (req, res, next) {
     if (req.body.token === 'guest' || req.body.token === 'anon'
-    || ((req.body.token === 'user') && (req.body.IdToken !== req.params.id))) {
+    || ((req.body.token === 'user') && (+req.body.IdToken !== +req.params.id))) {
         return res.status(403).json({ message: 'Access denied' });
     }
     return next();
@@ -182,18 +259,18 @@ app.post('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-    var oldUser;
-    if (usersArr[req.params.id]) {
-        oldUser = usersArr[req.params.id];
-        oldUser.username = req.body.username;
-        oldUser.surname = req.body.surname;
-        oldUser.age = req.body.age;
-        oldUser.pass = req.body.pass;
-        oldUser.role = req.body.role;
-        return res.json({ message: 'User data updated' });
-    }
-    return next();
-}, reportWrongId);
+
+    updateUserData(req.params.id, req.body)
+    .then(
+        function(result) {
+            return res.status(result.status).json({ message: result.message });
+        }
+    ).catch(
+        function (result) {
+            res.status(result.status).json({ message: result.message });
+        }
+    )
+});
 
 app.get('/user/:id', function (req, res, next) {
     if ((req.body.token === 'guest' || req.body.token === 'anon'
@@ -203,11 +280,22 @@ app.get('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-    if (usersArr[req.params.id]) {
-        return res.json(usersArr[req.params.id]);
-    }
-    return next();
-}, reportWrongId);
+
+    getUserById(req.params.id)
+    .then(
+        function (result) {
+            if(result.length) {
+                res.json(result[0]); //???
+            } else {
+                res.status(400).json({ message: 'Wrong user id' });
+            }
+        }   
+    ).catch(
+        function(result) {
+            res.status(400).json({ message: result });
+        }
+    )
+});
 
 app.delete('/user/:id', function (req, res, next) {
     if (req.body.token !== 'admin') {
@@ -215,32 +303,57 @@ app.delete('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-    var userId = req.params.id;
-    if (usersArr[userId]) {
-        delete usersArr[userId];
-        return res.json({ message: 'User deleted' });
-    }
-    return next();
-}, reportWrongId);
 
-app.get('/users', function (req, res, next) {
-    if (!usersArr.length) {
-        return res.status(400).json({ message: 'No users created' });
-    }
-    return next();
-}, function (req, res, next) {
+    deleteUser(req.params.id)
+    .then(
+        function(result) {
+            return res.status(result.status).json({ message: result.message });
+        }
+    ).catch(
+        function (result) {
+            res.status(result.status).json({ message: result.message });
+        }
+    )
+});
+
+app.get('/users',  function (req, res, next) {
     if (req.body.token === 'admin' || req.body.token === 'user') {
-        return res.json(usersArr);
+        getAllUseres()
+        .then(
+            function (results){
+                if(results.length) {
+                    return res.json(results);
+                } else {
+                    return res.status(400).json({ message: 'No users created' });
+                }
+            }
+        ).catch(
+            function (result) {
+                res.status(400).json({ message: result });
+            }
+        )
+    } else {
+        return next();
     }
-    return next();
 }, function (req, res, next) {
-    var user;
     if (req.body.token === 'guest') {
-        user = [];
-        user.push(usersArr[req.body.IdToken]);
-        return res.json(user);
+        getUserById(req.body.IdToken)
+        .then(
+            function (result) {
+                if(result.length) {
+                    res.json(result); //???
+                } else {
+                    res.status(400).json({ message: 'Wrong user id' });
+                }
+            }   
+        ).catch(
+            function(result) {
+                res.status(400).json({ message: result });
+            }
+        )
+    } else {
+        return next();
     }
-    return next();
 }, function (req, res) {
     res.status(403).json({ message: 'Access denied' });
 });

@@ -1,6 +1,6 @@
 var mysql = require('mysql');
-var query = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES ("Alt", "Smith", 22, "admin", "Hello123")';
-var query2 = 'SELECT * FROM `users`';
+var query = 'UPDATE `users` SET `username`="ABC", `surname`="ABC", `age`=45, `role`="admin", `password`="Hello123" WHERE `id`=26';
+// var query2 = 'SELECT * FROM `users`';
 
 var connection = mysql.createConnection({
     host: 'localhost',
@@ -19,7 +19,7 @@ connection.query(query, function (err, results) {
     console.log('Result: ' + results);
 });
 
-connection.query(query2, function (err, results) {
-    if (err) throw err;
-    console.log(results);
-});
+// connection.query(query2, function (err, results) {
+//     if (err) throw err;
+//     console.log(results);
+// });
