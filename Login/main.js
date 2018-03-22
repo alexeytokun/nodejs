@@ -2,22 +2,35 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var port = 8000;
+var mysql = require('mysql');
 var usersArr = [];
-var id = 0;
+var userId;
+
+var connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '123',
+    database: 'newdb'
+});
+
+connection.connect(function (err) {
+    if (err) console.log('Not Connected!');
+    console.log('Connected!');
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-
-function User(username, surname, age, userid, pass, role) {
-    this.username = username;
-    this.surname = surname;
-    this.age = age;
-    this.id = userid;
-    this.pass = pass;
-    this.role = role;
+function addUserToDb(username, surname, age, pass, role) {
+    var userData = [username, surname, age, role, pass];
+    var query = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
+    connection.query(query, userData, function (err, results) {
+        if (err) throw err;
+        console.log('User saved');
+        userId = results.insertId;
+    });
 }
 
 function vaidate(data) {
@@ -39,15 +52,30 @@ function login(user) {
     return false;
 }
 
-function isUnique(username) {
-    for (var obj of usersArr) {
-        if (obj != undefined) {
-            if (obj.username === username) {
-                return false;
-            }
+function getUsernames() {
+    return new Promise( 
+        function (resolve, reject) {
+            connection.query('SELECT `username` FROM `users`', function (err, results) {
+                if (err) reject(err);
+                resolve(results);
+            });
         }
-    }
-    return true;
+    )
+}
+
+function isUnique(username) {
+
+    return getUsernames().then(
+        function(results) {
+            if (!results.length) return;
+            for (var i = 0; i < results.length; i+=1) {
+                if (results[i].username === username) {
+                    throw ('Not unique username');
+                }
+            }
+            return;
+        }
+    )
 }
 
 function reportWrongId(req, res) {
@@ -98,20 +126,21 @@ app.use('/', function (req, res, next) {
 });
 
 app.post('/user', function (req, res, next) {
-    if (!isUnique(req.body.username)) {
-        return res.status(406).json({ message: 'Not unique username' });
-    }
-    return next();
+    isUnique(req.body.username).then(
+        function() {
+            next();
+        }
+    ).catch(
+        function(result) {
+            console.log(result);
+            return res.status(406).json({ message: result });
+        }
+    )
 }, function (req, res, next) {
-    var newUser;
     if (vaidate(req.body)) {
-        newUser = new User(
-            req.body.username, req.body.surname,
-            req.body.age, id, req.body.pass, req.body.role
-        );
-        usersArr.push(newUser);
-        id = id + 1;
-        return res.json({ message: String(id) });
+        addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role);
+        console.log(userId);
+        return res.json({ message: userId }); //нужен промис
     }
     return next();
 }, function (req, res) {
