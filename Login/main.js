@@ -15,10 +15,14 @@ var pool = mysql.createPool({
 var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
         pool.getConnection(function (err, connection) {
+            if (err) {
+                reject(new Error('Database connection error'));
+                return;
+            }
             connection.query(
                 sql, props,
                 function (err, res) {
-                    if (err) reject(err);
+                    if (err) reject(new Error('Database query error'));
                     else resolve(res);
                 }
             );
@@ -273,8 +277,6 @@ app.get('/users', function (req, res, next) {
 app.listen(port, function (error) {
     if (error) {
         console.log('Error:' + error.name + '\n');
-    }
-
-    console.log('Listening port ' + port + '\n');
+    } else console.log('Listening port ' + port + '\n');
 });
 

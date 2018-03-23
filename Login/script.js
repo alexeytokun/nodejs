@@ -17,8 +17,8 @@ var pass2 = document.getElementById('pass2');
 var role = document.getElementById('role');
 
 var modal = document.getElementById('myModal');
-var span = document.getElementsByClassName('close')[1];
-var span2 = document.getElementsByClassName('close')[0];
+var span = document.getElementsByClassName('close')[2];
+var spanSignIn = document.getElementsByClassName('close')[0];
 
 var signIn = document.getElementById('signin');
 var signInButton = document.getElementById('si_save');
@@ -28,10 +28,19 @@ var siPassword = document.getElementById('si_password');
 var signInSwitch = document.getElementById('si_switch');
 var signUpSwitch = document.getElementById('switch');
 
+var modalAlert = document.getElementById('modalWindow');
+var modalAlertCloseButton = document.getElementById('closeWindow');
+var alertText = document.getElementById('alert');
+
 function validate() {
     return username.checkValidity() && surname.checkValidity() &&
-        age.checkValidity() && pass.checkValidity() &&
-        pass2.checkValidity() && (pass.value === pass2.value);
+    age.checkValidity() && pass.checkValidity() &&
+    pass2.checkValidity() && (pass.value === pass2.value);
+}
+
+function showAlertModal(info) {
+    modalAlert.classList.add('show');
+    alertText.innerHTML = info;
 }
 
 function validateSignIn() {
@@ -138,7 +147,7 @@ function getUserInfo(id, flag) {
 function showUserInfo(user) {
     var modalDiv = document.createElement('div');
     var container = document.createElement('div');
-    var newSpan = document.createElement('span');
+    var closeSpan = document.createElement('span');
     var table = document.createElement('table');
     var tr = document.createElement('tr');
 
@@ -146,8 +155,8 @@ function showUserInfo(user) {
     container.setAttribute('id', 'userinfo');
     container.classList.add('modal-content');
     container.classList.add('modal-info');
-    newSpan.innerHTML = '&times;';
-    container.appendChild(newSpan).classList.add('close');
+    closeSpan.innerHTML = '&times;';
+    container.appendChild(closeSpan).classList.add('close');
     tr.innerHTML = '<td>Name: ' + user.username + '</td>' +
         '<td>Surname: ' + user.surname + '</td>' +
         '<td>Age: ' + user.age + '</td>' +
@@ -159,7 +168,7 @@ function showUserInfo(user) {
     modalDiv.appendChild(container);
     wrapper.appendChild(modalDiv);
     modalDiv.style.display = 'block';
-    newSpan.onclick = function () {
+    closeSpan.onclick = function () {
         wrapper.removeChild(modalDiv);
     };
 }
@@ -173,7 +182,7 @@ function editUser(id) {
             modal.classList.add('show');
             userForm.setAttribute('action', mainUrl + '/user/' + id);
         }).catch(function (response) {
-            alert(response.message);
+            showAlertModal(response.message);
         });
 }
 
@@ -182,7 +191,7 @@ function showUser(id) {
         .then(function (response) {
             showUserInfo(response);
         }).catch(function (response) {
-            alert(response.message);
+            showAlertModal(response.message);
         });
 }
 
@@ -238,14 +247,14 @@ function createTable(usersObj) {
         if (target.className === 'del') {
             deleteUser(targetId)
                 .then(function () {
-                    // alert(response);
+                    // showAlertModal(response);
                     return updateTable();
                 })
                 .then(function (response) {
                     createTable(response);
                 })
                 .catch(function (response) {
-                    alert(response);
+                    showAlertModal(response);
                 });
         }
 
@@ -266,7 +275,7 @@ saveButton.onclick = function () {
     '&pass=' + pass.value + '&role=' + role.value;
 
     if (!validate()) {
-        alert('Validation error');
+        showAlertModal('Validation error');
         return;
     }
 
@@ -278,13 +287,13 @@ saveButton.onclick = function () {
                     createTable(response);
                 })
                 .catch(function (response) {
-                    alert(response);
+                    showAlertModal(response);
                 });
         }
         clearForm();
     })
         .catch(function (response) {
-            alert(response);
+            showAlertModal(response);
         });
 
     userForm.setAttribute('action', mainUrl + '/user');
@@ -294,7 +303,7 @@ saveButton.onclick = function () {
 signInButton.onclick = function () {
     var userData = 'username=' + siUsername.value + '&pass=' + siPassword.value;
     if (!validateSignIn()) {
-        alert('Validation error');
+        showAlertModal('Validation error');
         return;
     }
 
@@ -310,7 +319,7 @@ signInButton.onclick = function () {
             createTable(response);
         })
         .catch(function (response) {
-            alert(response);
+            showAlertModal(response);
         });
 };
 
@@ -324,7 +333,7 @@ showAll.onclick = function () {
                 createTable(response);
             })
             .catch(function (response) {
-                alert(response);
+                showAlertModal(response);
             });
     }
 };
@@ -343,7 +352,7 @@ span.onclick = function () {
     clearForm();
 };
 
-span2.onclick = function () {
+spanSignIn.onclick = function () {
     signIn.classList.remove('show');
 };
 
@@ -357,6 +366,10 @@ window.onclick = function (event) {
     if (event.target === signIn) {
         signIn.classList.remove('show');
     }
+
+    if (event.target === modalAlert) {
+        modalAlert.classList.remove('show');
+    }
 };
 
 signInSwitch.onclick = function () {
@@ -369,3 +382,6 @@ signUpSwitch.onclick = function () {
     signIn.classList.toggle('show');
 };
 
+modalAlertCloseButton.onclick = function () {
+    modalAlert.classList.remove('show');
+};
