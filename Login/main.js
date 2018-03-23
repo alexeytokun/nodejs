@@ -110,9 +110,9 @@ function updateUserData(id, data) {
         });
 }
 
-function isUnique(username) {
+function isUnique(username, id) {
     return checkUsername(username).then(function (results) {
-        if (!results.length) return;
+        if (!results.length || (+results[0].id === +id)) return;
         throw ({ message: 'Not unique username' });
     });
 }
@@ -198,6 +198,13 @@ app.post('/user/:id', function (req, res, next) {
         return res.status(406).json({ message: 'Validation error' });
     }
     return next();
+}, function (req, res, next) {
+    isUnique(req.body.username, req.params.id)
+        .then(function (result) {
+            next();
+        }).catch(function (result) {
+            return res.status(406).json({ message: result.message });
+        });
 }, function (req, res, next) {
     updateUserData(req.params.id, req.body)
         .then(function (result) {
