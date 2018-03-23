@@ -64,16 +64,18 @@ function saveUser(user) {
         XHR.setRequestHeader('User-Role-Token', String(authHeader));
         XHR.setRequestHeader('User-Id-Token', String(idHeader));
         XHR.send(user);
-        XHR.onload = XHR.onerror = function () {
+        XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
             } else if (this.status === 406) {
                 reject(response.message);
             } else {
-                console.log('Error with status: ' + this.status);
-                reject('Error with status: ' + this.status);
+                reject(new Error(this.status));
             }
+        };
+        XHR.onerror = function () {
+            reject(new Error('Connection error'));
         };
     });
 }
@@ -85,16 +87,18 @@ function signInUser(user) {
         XHR.open('POST', url);
         XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         XHR.send(user);
-        XHR.onload = XHR.onerror = function () {
+        XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
             } else if (this.status === 406) {
                 reject(response.message);
             } else {
-                console.log('Error with status: ' + this.status);
-                reject('Error with status: ' + this.status);
+                reject(new Error(this.status));
             }
+        };
+        XHR.onerror = function () {
+            reject(new Error('Connection error'));
         };
     });
 }
@@ -108,15 +112,18 @@ function deleteUser(id) {
         XHR.setRequestHeader('User-Id-Token', String(idHeader));
         XHR.send();
 
-        XHR.onload = XHR.onerror = function () {
+        XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response.message);
             } else if (this.status === 403) {
                 reject(response.message);
             } else {
-                reject('Error with status: ' + this.status);
+                reject(new Error(this.status));
             }
+        };
+        XHR.onerror = function () {
+            reject(new Error('Connection error'));
         };
     });
 }
@@ -131,15 +138,18 @@ function getUserInfo(id, flag) {
         if (flag) XHR.setRequestHeader('Info', 'info');
         XHR.send();
 
-        XHR.onload = XHR.onerror = function () {
+        XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
             } else if (this.status === 403) {
                 reject(response);
             } else {
-                reject('Error with status: ' + this.status);
+                reject(new Error(this.status));
             }
+        };
+        XHR.onerror = function () {
+            reject(new Error('Connection error'));
         };
     });
 }
@@ -204,16 +214,18 @@ function updateTable() {
         XHR.setRequestHeader('User-Id-Token', String(idHeader));
         XHR.send();
         clearForm();
-        XHR.onload = XHR.onerror = function () {
+        XHR.onload = function () {
             var res = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(res);
             } else if (this.status === 403 || this.status === 400) {
                 reject(res.message);
             } else {
-                console.log('Error with status: ' + this.status);
-                reject('Error with status: ' + this.status);
+                reject(new Error(this.status));
             }
+        };
+        XHR.onerror = function () {
+            reject(new Error('Connection error'));
         };
     });
 }
