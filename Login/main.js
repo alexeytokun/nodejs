@@ -17,13 +17,13 @@ var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
         pool.getConnection(function (err, connection) {
             if (err) {
-                reject({ status: 409, message: 'Database connection error' });
+                reject({ status: 409, message: 'DB_CON_ERROR' });
                 return;
             }
             connection.query(
                 sql, props,
                 function (err, res) {
-                    if (err) reject({ status: 409, message: 'Database query error' });
+                    if (err) reject({ status: 409, message: 'DB_QUERY_ERROR' });
                     else resolve(res);
                 }
             );
@@ -60,7 +60,7 @@ function checkUserData(username, password) {
 function login(user) {
     return checkUserData(user.username, user.pass).then(function (results) {
         if (results.length) return results;
-        throw ({ status: 406, message: 'Wrong username or password' });
+        throw ({ status: 406, message: 'AUTH_ERROR' });
     }).catch(function(result) {
         throw ({ status: result.status, message: result.message });
     });
@@ -93,10 +93,8 @@ function deleteUser(id) {
             if (result.affectedRows !== 0) {
                 return ({ status: 200, message: 'User deleted' });
             }
-            console.log('1');
-            return ({ status: 400, message: 'Wrong user id' });
+            return ({ status: 400, message: 'WRONG_ID_ERROR' });
         }).catch(function (result) {
-            console.log('2');
             throw ({ status: result.status, message: result.message });
         });
 }
@@ -109,10 +107,8 @@ function updateUserData(id, data) {
             if (result.affectedRows !== 0) {
                 return ({ status: 200, message: 'User data updated' });
             }
-            console.log('3');
-            return ({ status: 400, message: 'Wrong user id' });
+            return ({ status: 400, message: 'WRONG_ID_ERROR' });
         }).catch(function (result) {
-            console.log('4');
             throw ({ status: result.status, message: result.message });
         });
 }
@@ -120,7 +116,7 @@ function updateUserData(id, data) {
 function isUnique(username, id) {
     return checkUsername(username).then(function (results) {
         if (!results.length || (+results[0].id === +id)) return;
-        throw ({ status: 406, message: 'Not unique username' });
+        throw ({ status: 406, message: 'USERNAME_ERROR' });
     }).catch(function (result) {
         throw ({ status: result.status, message: result.message });
     });
@@ -131,7 +127,7 @@ function countTimestamp(min) {
 }
 
 function setToken(results) {
-    var timestamp = countTimestamp(2);
+    var timestamp = countTimestamp(20);
     var uuid = uuidv4();
     var sqlUpdate = 'UPDATE `tokens` SET `uuid`=?, `timestamp`=? WHERE id=?';
     var sqlInsert = 'INSERT INTO `tokens` (`uuid`, `timestamp`, `id`) VALUES (?, ?, ?)';
@@ -145,11 +141,9 @@ function setToken(results) {
                 .then(function (res) {
                     return uuid;
                 }).catch(function (res) {
-                    console.log('5');
                     throw ({ status: res.status, message: res.message });
                 });
         }).catch(function (result) {
-            console.log('6');
             throw ({ status: result.status, message: result.message });
         });
 }
@@ -169,12 +163,10 @@ function deleteToken(id) {
     var prop = id;
 
     return query(sql, prop)
-        .then(function(result) {
-            console.log('7');
-            throw ({ status: 401, message: 'Token time expired' });
+        .then(function (result) {
+            throw ({ status: 401, message: 'TOKEN_TIME_ERROR' });
         },
         function (result) {
-            console.log('8');
             throw ({ status: result.status, message: result.message });
         }
         );
@@ -201,10 +193,10 @@ app.use(function (req, res, next) {
             return next();
         }
         getDataFromToken(headerAuthToken)
-            .then(function(results) {
+            .then(function (results) {
                 if (!results.length) {
-                    console.log('10');
-                    throw ({ status: 401, message: 'No such token in database' });
+                    body.token = 'anon';
+                    return;
                 }
                 timestamp = +results[0].timestamp;
                 if (checkTimestamp(timestamp)) {
@@ -212,18 +204,18 @@ app.use(function (req, res, next) {
                         .then(function (result) {
                             return result;
                         }).catch(function (result) {
-                            console.log('9');
                             throw ({ status: result.status, message: result.message })
                         });
                 }
                 return deleteToken(results[0].id);
             }).then(function (result) {
-                body.token = result[0].role;
-                body.IdToken = result[0].id;
+                if (result) {
+                    body.token = result[0].role;
+                    body.IdToken = result[0].id;
+                }
                 return next();
             }).catch(function (result) {
                 body.token = 'anon';
-                console.log('11');
                 return res.status(result.status).json({ message: result.message });
             });
     } else return next();
@@ -233,7 +225,6 @@ app.post('/user', function (req, res, next) {
     isUnique(req.body.username).then(function () {
         next();
     }).catch(function (result) {
-        console.log('12');
         return res.status(result.status).json({ message: result.message });
     });
 }, function (req, res, next) {
@@ -246,8 +237,7 @@ app.post('/user', function (req, res, next) {
             });
     } else next();
 }, function (req, res) {
-    console.log('13');
-    res.status(406).json({ message: 'Validation error' });
+    res.status(406).json({ message: 'VALIDATION_ERROR' });
 });
 
 app.post('/signin', function (req, res, next) {
@@ -267,13 +257,12 @@ app.post('/signin', function (req, res, next) {
 app.post('/user/:id', function (req, res, next) {
     if (req.body.token === 'guest' || req.body.token === 'anon'
     || ((req.body.token === 'user') && (+req.body.IdToken !== +req.params.id))) {
-        return res.status(403).json({ message: 'accessDenied' });
+        return res.status(403).json({ message: 'ACCESS_DENIED_ERROR' });
     }
     return next();
 }, function (req, res, next) {
     if (!vaidate(req.body)) {
-        console.log('14');
-        return res.status(406).json({ message: 'Validation error' });
+        return res.status(406).json({ message: 'VALIDATION_ERROR' });
     }
     return next();
 }, function (req, res, next) {
@@ -281,7 +270,6 @@ app.post('/user/:id', function (req, res, next) {
         .then(function (result) {
             next();
         }).catch(function (result) {
-            console.log('15');
             return res.status(result.status).json({ message: result.message });
         });
 }, function (req, res, next) {
@@ -297,7 +285,7 @@ app.get('/user/:id', function (req, res, next) {
     if ((req.body.token === 'guest' || req.body.token === 'anon'
     || ((req.body.token === 'user') && (+req.body.IdToken !== +req.params.id)))
     && !req.headers.info) {
-        return res.status(403).json({ message: 'accessDenied' });
+        return res.status(403).json({ message: 'ACCESS_DENIED_ERROR' });
     }
     return next();
 }, function (req, res, next) {
@@ -306,28 +294,23 @@ app.get('/user/:id', function (req, res, next) {
             if (result.length) {
                 res.json(result[0]);
             } else {
-                console.log('16');
-                res.status(400).json({ message: 'Wrong user id' });
+                res.status(400).json({ message: 'WRONG_ID_ERROR' });
             }
         }).catch(function (result) {
-            console.log('17');
             res.status(result.status).json({ message: result.message });
         });
 });
 
 app.delete('/user/:id', function (req, res, next) {
     if (req.body.token !== 'admin') {
-        console.log('18');
-        return res.status(403).json({ message: 'accessDenied' });
+        return res.status(403).json({ message: 'ACCESS_DENIED_ERROR' });
     }
     return next();
 }, function (req, res, next) {
     deleteUser(req.params.id)
         .then(function (result) {
-            console.log('19');
             return res.status(result.status).json({ message: result.message });
         }).catch(function (result) {
-            console.log('20');
             res.status(result.status).json({ message: result.message });
         });
 });
@@ -339,10 +322,8 @@ app.get('/users', function (req, res, next) {
                 if (results.length) {
                     return res.json(results);
                 }
-                console.log('21');
-                return res.status(400).json({ message: 'No users created' });
+                return res.status(400).json({ message: 'NO_USERS_ERROR' });
             }).catch(function (result) {
-                console.log('22');
                 res.status(result.status).json({ message: result.message });
             });
     } else {
@@ -355,19 +336,16 @@ app.get('/users', function (req, res, next) {
                 if (result.length) {
                     res.json(result);
                 } else {
-                    console.log('23');
-                    res.status(400).json({ message: 'Wrong user id' });
+                    res.status(400).json({ message: 'WRONG_ID_ERROR' });
                 }
             }).catch(function (result) {
-                console.log('24');
                 res.status(result.status).json({ message: result.message });
             });
     } else {
         return next();
     }
 }, function (req, res) {
-    console.log('25');
-    res.status(403).json({ message: 'accessDenied' });
+    res.status(403).json({ message: 'ACCESS_DENIED_ERROR' });
 });
 
 app.listen(port, function (error) {

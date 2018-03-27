@@ -39,8 +39,8 @@ var errorsObj = {
     AUTH_ERROR: 'Wrong username or password',
     WRONG_ID_ERROR: 'Wrong user id',
     USERNAME_ERROR: 'Not unique username',
-    TOKEN_TIME_ERROR: 'Please, relogin',
-    TOKEN_AUTH_ERROR: 'Please, relogin',
+    TOKEN_TIME_ERROR: 'Relogin, please',
+    TOKEN_AUTH_ERROR: 'Relogin, please',
     VALIDATION_ERROR: 'Validation error',
     NO_USERS_ERROR: 'No users created'
 };
@@ -68,6 +68,15 @@ function clearForm() {
     pass2.value = '';
 }
 
+function logOut() {
+    var elem;
+    if (document.getElementById('userstable')) {
+        elem = document.getElementById('userstable');
+        elem.parentNode.removeChild(elem);
+    }
+    signIn.classList.toggle('show');
+}
+
 function saveUser(user) {
     return new Promise(function (resolve, reject) {
         var url = userForm.getAttribute('action');
@@ -80,12 +89,15 @@ function saveUser(user) {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
             } else {
                 reject(response);
             }
         };
         XHR.onerror = function () {
-            reject({ message: errorsObj.SERVER_CON_ERROR });
+            reject({ message: 'SERVER_CON_ERROR' });
         };
     });
 }
@@ -101,12 +113,15 @@ function signInUser(user) {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
             } else {
                 reject(response);
             }
         };
         XHR.onerror = function () {
-            reject({ message: errorsObj.SERVER_CON_ERROR });
+            reject({ message: 'SERVER_CON_ERROR' });
         };
     });
 }
@@ -123,12 +138,15 @@ function deleteUser(id) {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response.message);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
             } else {
                 reject(response);
             }
         };
         XHR.onerror = function () {
-            reject({ message: errorsObj.SERVER_CON_ERROR });
+            reject({ message: 'SERVER_CON_ERROR' });
         };
     });
 }
@@ -145,12 +163,15 @@ function getUserInfo(id, flag) {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
             } else {
                 reject(response);
             }
         };
         XHR.onerror = function () {
-            reject({ message: errorsObj.SERVER_CON_ERROR });
+            reject({ message: 'SERVER_CON_ERROR' });
         };
     });
 }
@@ -193,7 +214,7 @@ function editUser(id) {
             modal.classList.add('show');
             userForm.setAttribute('action', mainUrl + '/user/' + id);
         }).catch(function (response) {
-            showAlertModal(response.message);
+            showAlertModal(errorsObj[response.message]);
         });
 }
 
@@ -202,7 +223,7 @@ function showUser(id) {
         .then(function (response) {
             showUserInfo(response);
         }).catch(function (response) {
-            showAlertModal(response.message);
+            showAlertModal(errorsObj[response.message]);
         });
 }
 
@@ -215,15 +236,18 @@ function updateTable() {
         XHR.send();
         clearForm();
         XHR.onload = function () {
-            var res = JSON.parse(XHR.response);
+            var response = JSON.parse(XHR.response);
             if (this.status === 200) {
-                resolve(res);
+                resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
             } else {
-                reject(res);
+                reject(response);
             }
         };
         XHR.onerror = function () {
-            reject({ message: errorsObj.SERVER_CON_ERROR });
+            reject({ message: 'SERVER_CON_ERROR' });
         };
     });
 }
@@ -264,7 +288,7 @@ function createTable(usersObj) {
                     createTable(response);
                 })
                 .catch(function (response) {
-                    showAlertModal(response.message);
+                    showAlertModal(errorsObj[response.message]);
                 });
         }
 
@@ -297,13 +321,13 @@ saveButton.onclick = function () {
                     createTable(response);
                 })
                 .catch(function (response) {
-                    showAlertModal(response.message);
+                    showAlertModal(errorsObj[response.message]);
                 });
         }
         clearForm();
     })
         .catch(function (response) {
-            showAlertModal(response.message);
+            showAlertModal(errorsObj[response.message]);
         });
 
     userForm.setAttribute('action', mainUrl + '/user');
@@ -326,9 +350,11 @@ signInButton.onclick = function () {
         })
         .then(function (response) {
             createTable(response);
+            siUsername.value = '';
+            siPassword.value = '';
         })
         .catch(function (response) {
-            showAlertModal(response.message);
+            showAlertModal(errorsObj[response.message]);
         });
 };
 
@@ -342,9 +368,7 @@ showAll.onclick = function () {
                 createTable(response);
             })
             .catch(function (response) {
-                // console.log(response);
-                // showAlertModal(errorsObj[response]);
-                showAlertModal(response.message);
+                showAlertModal(errorsObj[response.message]);
             });
     }
 };
