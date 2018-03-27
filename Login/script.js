@@ -1,6 +1,5 @@
 var mainUrl = 'http://127.0.0.1:8000';
 var authHeader;
-var idHeader;
 
 var wrapper = document.getElementById('wrapper');
 var saveButton = document.getElementById('save');
@@ -32,6 +31,20 @@ var modalAlert = document.getElementById('modalWindow');
 var modalAlertCloseButton = document.getElementById('closeWindow');
 var alertText = document.getElementById('alert');
 
+var errorsObj = {
+    accessDenied: 'Access Denied',
+    a: 'Database connection error',
+    b: 'Database query error',
+    c: 'Wrong username or password',
+    d: 'Wrong user id',
+    e: 'Not unique username',
+    f: 'Token time expired',
+    g: 'Can`t delete expired token',
+    h: 'No such token in database',
+    i: 'Validation error',
+    j: 'No users created'
+};
+
 function validate() {
     return username.checkValidity() && surname.checkValidity() &&
     age.checkValidity() && pass.checkValidity() &&
@@ -61,8 +74,7 @@ function saveUser(user) {
         var XHR = new XMLHttpRequest();
         XHR.open('POST', url);
         XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        XHR.setRequestHeader('User-Role-Token', String(authHeader));
-        XHR.setRequestHeader('User-Id-Token', String(idHeader));
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
         XHR.send(user);
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
@@ -71,7 +83,7 @@ function saveUser(user) {
             } else if (this.status === 406) {
                 reject(response.message);
             } else {
-                reject(new Error(this.status));
+                reject(new Error(this.status + 'я тут')); // Change
             }
         };
         XHR.onerror = function () {
@@ -108,8 +120,7 @@ function deleteUser(id) {
         var url = mainUrl + '/user/' + id;
         var XHR = new XMLHttpRequest();
         XHR.open('DELETE', url);
-        XHR.setRequestHeader('User-Role-Token', String(authHeader));
-        XHR.setRequestHeader('User-Id-Token', String(idHeader));
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
         XHR.send();
 
         XHR.onload = function () {
@@ -133,11 +144,9 @@ function getUserInfo(id, flag) {
         var url = mainUrl + '/user/' + id;
         var XHR = new XMLHttpRequest();
         XHR.open('GET', url);
-        XHR.setRequestHeader('User-Role-Token', String(authHeader));
-        XHR.setRequestHeader('User-Id-Token', String(idHeader));
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
         if (flag) XHR.setRequestHeader('Info', 'info');
         XHR.send();
-
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
@@ -210,8 +219,7 @@ function updateTable() {
         var url = mainUrl + '/users';
         var XHR = new XMLHttpRequest();
         XHR.open('GET', url);
-        XHR.setRequestHeader('User-Role-Token', String(authHeader));
-        XHR.setRequestHeader('User-Id-Token', String(idHeader));
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
         XHR.send();
         clearForm();
         XHR.onload = function () {
@@ -323,8 +331,7 @@ signInButton.onclick = function () {
     signInUser(userData)
         .then(function (response) {
             signIn.classList.remove('show');
-            authHeader = response.roletoken;
-            idHeader = response.idtoken;
+            authHeader = response.authtoken;
             return updateTable();
         })
         .then(function (response) {
@@ -345,6 +352,8 @@ showAll.onclick = function () {
                 createTable(response);
             })
             .catch(function (response) {
+                // console.log(response);
+                // showAlertModal(errorsObj[response]);
                 showAlertModal(response);
             });
     }

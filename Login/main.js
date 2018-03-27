@@ -3,6 +3,7 @@ var app = express();
 var bodyParser = require('body-parser');
 var port = 8000;
 var mysql = require('mysql');
+var uuidv4 = require('uuid/v4');
 
 var pool = mysql.createPool({
     host: 'localhost',
@@ -90,8 +91,10 @@ function deleteUser(id) {
             if (results.affectedRows !== 0) {
                 return ({ status: 200, message: 'User deleted' });
             }
+            console.log('1');
             return ({ status: 400, message: 'Wrong user id' });
         }).catch(function (err) {
+            console.log('2');
             throw ({ status: 400, message: err });
         });
 }
@@ -104,8 +107,10 @@ function updateUserData(id, data) {
             if (results.affectedRows !== 0) {
                 return ({ status: 200, message: 'User data updated' });
             }
+            console.log('3');
             return ({ status: 400, message: 'Wrong user id' });
         }).catch(function (err) {
+            console.log('4');
             throw ({ status: 400, message: err });
         });
 }
@@ -117,38 +122,61 @@ function isUnique(username, id) {
     });
 }
 
-app.use(function (req, res, next) {
-    var body;
-    var headerRoleToken;
-    var headerIdToken;
-    if (req.method !== 'OPTIONS') {
-        body = req.body;
-        headerRoleToken = req.headers['user-role-token'];
-        headerIdToken = +req.headers['user-id-token'];
+function countTimestamp(min) {
+    return Date.now() + (60000 * min);
+}
 
-        switch (headerRoleToken) {
-        case 'admin':
-            body.token = 'admin';
-            body.IdToken = headerIdToken;
-            break;
-        case 'user':
-            body.token = 'user';
-            body.IdToken = headerIdToken;
-            break;
-        case 'guest':
-            body.token = 'guest';
-            body.IdToken = headerIdToken;
-            break;
-        default:
-            body.token = 'anon';
-            break;
+function setToken(results) {
+    var timestamp = countTimestamp(0.2);
+    var uuid = uuidv4();
+    var sqlUpdate = 'UPDATE `tokens` SET `uuid`=?, `timestamp`=? WHERE id=?';
+    var sqlInsert = 'INSERT INTO `tokens` (`uuid`, `timestamp`, `id`) VALUES (?, ?, ?)';
+    var userData = [uuid, timestamp, results[0].id];
+    return query(sqlUpdate, userData)
+        .then(function (result) {
+            if (result.affectedRows !== 0) {
+                return uuid;
+            }
+            return query(sqlInsert, userData)
+                .then(function (result) {
+                    return uuid;
+                }).catch(function (result) {
+                    console.log('5');
+                    throw ({ status: 400, message: err });
+                });
+        }).catch(function (result) {
+            console.log('6');
+            throw ({ status: 400, message: err });
+        });
+}
+
+function getDataFromToken(uuid) {
+    var sql = 'SELECT * FROM `tokens` WHERE `uuid` = ?';
+    var prop = uuid;
+    return query(sql, prop);
+}
+
+function checkTimestamp(timestamp) {
+    return (Date.now() < timestamp);
+}
+
+function deleteToken(id) {
+    var sql = 'DELETE FROM `tokens` WHERE `id` = ?';
+    var prop = id;
+
+    return query(sql, prop)
+        .then(function(result) {
+            console.log('7');
+            throw ({status: 403, message: 'Token time expired'});
+        },
+        function (result) {
+            console.log('8');
+            throw ({status: 403, message: 'Can`t delete expired token'});
         }
-    }
+        );
+}
 
-    next();
-});
-
-app.use('/', function (req, res, next) {
+app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', '*');
     res.header('Access-Control-Allow-Methods', '*');
@@ -156,10 +184,55 @@ app.use('/', function (req, res, next) {
     next();
 });
 
+app.use(function (req, res, next) {
+    var body;
+    var headerAuthToken;
+    var timestamp;
+
+    if (req.method !== 'OPTIONS') {
+        body = req.body;
+        headerAuthToken = String(req.headers['user-auth-token']);
+        console.log(headerAuthToken);
+        if (headerAuthToken === 'undefined') {
+            body.token = 'anon';
+            console.log('here');
+            return next();
+        }
+        getDataFromToken(headerAuthToken)
+            .then(function(result) {
+                if (!result.length) {
+                    console.log('10');
+                    throw ({status: 403, message: 'No such token in database'});
+                }
+                timestamp = +result[0].timestamp;
+                if (checkTimestamp(timestamp)) {
+                    return getUserById(result[0].id)
+                        .then(function (res) {
+                            return res;
+                        }).catch(function (res) {
+                            console.log('9');
+                            throw ({status: 403, message: 'Database connection error'})
+                        });
+                }
+                return deleteToken(result[0].id);
+            }).then(function (result) {
+                body.token = result[0].role;
+                body.IdToken = result[0].id;
+                return next();
+            }).catch(function (result) {
+                body.token = 'anon';
+                var status = result.status || 403;
+                console.log('11');
+                return res.status(status).json({ message: result.message });
+            });
+    } else return next();
+});
+
 app.post('/user', function (req, res, next) {
     isUnique(req.body.username).then(function () {
         next();
     }).catch(function (result) {
+        console.log('12');
         return res.status(406).json({ message: result.message });
     });
 }, function (req, res, next) {
@@ -172,17 +245,20 @@ app.post('/user', function (req, res, next) {
             });
     }
 }, function (req, res) {
+    console.log('13');
     res.status(406).json({ message: 'Validation error' });
 });
 
 app.post('/signin', function (req, res, next) {
     login(req.body)
         .then(function (result) {
+            return setToken(result);
+        }).then(function (result) {
             return res.json({
-                roletoken: result[0].role,
-                idtoken: result[0].id
+                authtoken: result
             });
-        }).catch(function (result) {
+        })
+        .catch(function (result) {
             res.status(406).json({ message: result.message });
         });
 });
@@ -190,11 +266,12 @@ app.post('/signin', function (req, res, next) {
 app.post('/user/:id', function (req, res, next) {
     if (req.body.token === 'guest' || req.body.token === 'anon'
     || ((req.body.token === 'user') && (+req.body.IdToken !== +req.params.id))) {
-        return res.status(403).json({ message: 'Access denied' });
+        return res.status(403).json({ message: 'accessDenied' });
     }
     return next();
 }, function (req, res, next) {
     if (!vaidate(req.body)) {
+        console.log('14');
         return res.status(406).json({ message: 'Validation error' });
     }
     return next();
@@ -203,6 +280,7 @@ app.post('/user/:id', function (req, res, next) {
         .then(function (result) {
             next();
         }).catch(function (result) {
+            console.log('15');
             return res.status(406).json({ message: result.message });
         });
 }, function (req, res, next) {
@@ -218,7 +296,7 @@ app.get('/user/:id', function (req, res, next) {
     if ((req.body.token === 'guest' || req.body.token === 'anon'
     || ((req.body.token === 'user') && (+req.body.IdToken !== +req.params.id)))
     && !req.headers.info) {
-        return res.status(403).json({ message: 'Access denied' });
+        return res.status(403).json({ message: 'accessDenied' });
     }
     return next();
 }, function (req, res, next) {
@@ -227,23 +305,28 @@ app.get('/user/:id', function (req, res, next) {
             if (result.length) {
                 res.json(result[0]);
             } else {
+                console.log('16');
                 res.status(400).json({ message: 'Wrong user id' });
             }
         }).catch(function (result) {
+            console.log('17');
             res.status(400).json({ message: result });
         });
 });
 
 app.delete('/user/:id', function (req, res, next) {
     if (req.body.token !== 'admin') {
-        return res.status(403).json({ message: 'Access denied' });
+        console.log('18');
+        return res.status(403).json({ message: 'accessDenied' });
     }
     return next();
 }, function (req, res, next) {
     deleteUser(req.params.id)
         .then(function (result) {
+            console.log('19');
             return res.status(result.status).json({ message: result.message });
         }).catch(function (result) {
+            console.log('20');
             res.status(result.status).json({ message: result.message });
         });
 });
@@ -255,8 +338,10 @@ app.get('/users', function (req, res, next) {
                 if (results.length) {
                     return res.json(results);
                 }
+                console.log('21');
                 return res.status(400).json({ message: 'No users created' });
             }).catch(function (result) {
+                console.log('22');
                 res.status(400).json({ message: result });
             });
     } else {
@@ -269,16 +354,19 @@ app.get('/users', function (req, res, next) {
                 if (result.length) {
                     res.json(result);
                 } else {
+                    console.log('23');
                     res.status(400).json({ message: 'Wrong user id' });
                 }
             }).catch(function (result) {
+                console.log('24');
                 res.status(400).json({ message: result });
             });
     } else {
         return next();
     }
 }, function (req, res) {
-    res.status(403).json({ message: 'Access denied' });
+    console.log('25');
+    res.status(403).json({ message: 'accessDenied' });
 });
 
 app.listen(port, function (error) {
