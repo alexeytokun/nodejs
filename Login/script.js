@@ -39,9 +39,8 @@ var errorsObj = {
     AUTH_ERROR: 'Wrong username or password',
     WRONG_ID_ERROR: 'Wrong user id',
     USERNAME_ERROR: 'Not unique username',
-    TOKEN_TIME_ERROR: 'Token time expired',
-    TOKEN_DEL_ERROR: 'Can`t delete expired token',
-    TOKEN_AUTH_ERROR: 'No such token in database',
+    TOKEN_TIME_ERROR: 'Please, relogin',
+    TOKEN_AUTH_ERROR: 'Please, relogin',
     VALIDATION_ERROR: 'Validation error',
     NO_USERS_ERROR: 'No users created'
 };

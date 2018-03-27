@@ -17,13 +17,13 @@ var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
         pool.getConnection(function (err, connection) {
             if (err) {
-                reject(new Error('Database connection error'));
+                reject({ status: 409, message: 'Database connection error' });
                 return;
             }
             connection.query(
                 sql, props,
                 function (err, res) {
-                    if (err) reject(new Error('Database query error'));
+                    if (err) reject({ status: 409, message: 'Database query error' });
                     else resolve(res);
                 }
             );
@@ -60,7 +60,9 @@ function checkUserData(username, password) {
 function login(user) {
     return checkUserData(user.username, user.pass).then(function (results) {
         if (results.length) return results;
-        throw ({ message: 'Wrong username or password' });
+        throw ({ status: 406, message: 'Wrong username or password' });
+    }).catch(function(result) {
+        throw ({ status: result.status, message: result.message });
     });
 }
 
@@ -87,15 +89,15 @@ function deleteUser(id) {
     var prop = id;
 
     return query(sql, prop)
-        .then(function (results) {
-            if (results.affectedRows !== 0) {
+        .then(function (result) {
+            if (result.affectedRows !== 0) {
                 return ({ status: 200, message: 'User deleted' });
             }
             console.log('1');
             return ({ status: 400, message: 'Wrong user id' });
-        }).catch(function (err) {
+        }).catch(function (result) {
             console.log('2');
-            throw ({ status: 400, message: err });
+            throw ({ status: result.status, message: result.message });
         });
 }
 
@@ -103,22 +105,24 @@ function updateUserData(id, data) {
     var sql = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=? WHERE id=?';
     var prop = [data.username, data.surname, data.age, data.role, data.pass, id];
     return query(sql, prop)
-        .then(function (results) {
-            if (results.affectedRows !== 0) {
+        .then(function (result) {
+            if (result.affectedRows !== 0) {
                 return ({ status: 200, message: 'User data updated' });
             }
             console.log('3');
             return ({ status: 400, message: 'Wrong user id' });
-        }).catch(function (err) {
+        }).catch(function (result) {
             console.log('4');
-            throw ({ status: 400, message: err });
+            throw ({ status: result.status, message: result.message });
         });
 }
 
 function isUnique(username, id) {
     return checkUsername(username).then(function (results) {
         if (!results.length || (+results[0].id === +id)) return;
-        throw ({ message: 'Not unique username' });
+        throw ({ status: 406, message: 'Not unique username' });
+    }).catch(function (result) {
+        throw ({ status: result.status, message: result.message });
     });
 }
 
@@ -127,7 +131,7 @@ function countTimestamp(min) {
 }
 
 function setToken(results) {
-    var timestamp = countTimestamp(0.2);
+    var timestamp = countTimestamp(2);
     var uuid = uuidv4();
     var sqlUpdate = 'UPDATE `tokens` SET `uuid`=?, `timestamp`=? WHERE id=?';
     var sqlInsert = 'INSERT INTO `tokens` (`uuid`, `timestamp`, `id`) VALUES (?, ?, ?)';
@@ -138,15 +142,15 @@ function setToken(results) {
                 return uuid;
             }
             return query(sqlInsert, userData)
-                .then(function (result) {
+                .then(function (res) {
                     return uuid;
-                }).catch(function (result) {
+                }).catch(function (res) {
                     console.log('5');
-                    throw ({ status: 400, message: err });
+                    throw ({ status: res.status, message: res.message });
                 });
         }).catch(function (result) {
             console.log('6');
-            throw ({ status: 400, message: err });
+            throw ({ status: result.status, message: result.message });
         });
 }
 
@@ -167,11 +171,11 @@ function deleteToken(id) {
     return query(sql, prop)
         .then(function(result) {
             console.log('7');
-            throw ({status: 403, message: 'Token time expired'});
+            throw ({ status: 401, message: 'Token time expired' });
         },
         function (result) {
             console.log('8');
-            throw ({status: 403, message: 'Can`t delete expired token'});
+            throw ({ status: result.status, message: result.message });
         }
         );
 }
@@ -192,38 +196,35 @@ app.use(function (req, res, next) {
     if (req.method !== 'OPTIONS') {
         body = req.body;
         headerAuthToken = String(req.headers['user-auth-token']);
-        console.log(headerAuthToken);
         if (headerAuthToken === 'undefined') {
             body.token = 'anon';
-            console.log('here');
             return next();
         }
         getDataFromToken(headerAuthToken)
-            .then(function(result) {
-                if (!result.length) {
+            .then(function(results) {
+                if (!results.length) {
                     console.log('10');
-                    throw ({status: 403, message: 'No such token in database'});
+                    throw ({ status: 401, message: 'No such token in database' });
                 }
-                timestamp = +result[0].timestamp;
+                timestamp = +results[0].timestamp;
                 if (checkTimestamp(timestamp)) {
-                    return getUserById(result[0].id)
-                        .then(function (res) {
-                            return res;
-                        }).catch(function (res) {
+                    return getUserById(results[0].id)
+                        .then(function (result) {
+                            return result;
+                        }).catch(function (result) {
                             console.log('9');
-                            throw ({status: 403, message: 'Database connection error'})
+                            throw ({ status: result.status, message: result.message })
                         });
                 }
-                return deleteToken(result[0].id);
+                return deleteToken(results[0].id);
             }).then(function (result) {
                 body.token = result[0].role;
                 body.IdToken = result[0].id;
                 return next();
             }).catch(function (result) {
                 body.token = 'anon';
-                var status = result.status || 403;
                 console.log('11');
-                return res.status(status).json({ message: result.message });
+                return res.status(result.status).json({ message: result.message });
             });
     } else return next();
 });
@@ -233,17 +234,17 @@ app.post('/user', function (req, res, next) {
         next();
     }).catch(function (result) {
         console.log('12');
-        return res.status(406).json({ message: result.message });
+        return res.status(result.status).json({ message: result.message });
     });
 }, function (req, res, next) {
     if (vaidate(req.body)) {
         addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role)
             .then(function (result) {
                 return res.json({ message: result.insertId });
-            }).catch(function () {
-                return next();
+            }).catch(function (result) {
+                return res.status(result.status).json({ message: result.message });
             });
-    }
+    } else next();
 }, function (req, res) {
     console.log('13');
     res.status(406).json({ message: 'Validation error' });
@@ -259,7 +260,7 @@ app.post('/signin', function (req, res, next) {
             });
         })
         .catch(function (result) {
-            res.status(406).json({ message: result.message });
+            res.status(result.status).json({ message: result.message });
         });
 });
 
@@ -281,7 +282,7 @@ app.post('/user/:id', function (req, res, next) {
             next();
         }).catch(function (result) {
             console.log('15');
-            return res.status(406).json({ message: result.message });
+            return res.status(result.status).json({ message: result.message });
         });
 }, function (req, res, next) {
     updateUserData(req.params.id, req.body)
@@ -310,7 +311,7 @@ app.get('/user/:id', function (req, res, next) {
             }
         }).catch(function (result) {
             console.log('17');
-            res.status(400).json({ message: result });
+            res.status(result.status).json({ message: result.message });
         });
 });
 
@@ -342,7 +343,7 @@ app.get('/users', function (req, res, next) {
                 return res.status(400).json({ message: 'No users created' });
             }).catch(function (result) {
                 console.log('22');
-                res.status(400).json({ message: result });
+                res.status(result.status).json({ message: result.message });
             });
     } else {
         return next();
@@ -359,7 +360,7 @@ app.get('/users', function (req, res, next) {
                 }
             }).catch(function (result) {
                 console.log('24');
-                res.status(400).json({ message: result });
+                res.status(result.status).json({ message: result.message });
             });
     } else {
         return next();
