@@ -32,17 +32,18 @@ var modalAlertCloseButton = document.getElementById('closeWindow');
 var alertText = document.getElementById('alert');
 
 var errorsObj = {
-    accessDenied: 'Access Denied',
-    a: 'Database connection error',
-    b: 'Database query error',
-    c: 'Wrong username or password',
-    d: 'Wrong user id',
-    e: 'Not unique username',
-    f: 'Token time expired',
-    g: 'Can`t delete expired token',
-    h: 'No such token in database',
-    i: 'Validation error',
-    j: 'No users created'
+    SERVER_CON_ERROR: 'Server connection error',
+    ACCESS_DENIED_ERROR: 'Access Denied',
+    DB_CON_ERROR: 'Database connection error',
+    DB_QUERY_ERROR: 'Database query error',
+    AUTH_ERROR: 'Wrong username or password',
+    WRONG_ID_ERROR: 'Wrong user id',
+    USERNAME_ERROR: 'Not unique username',
+    TOKEN_TIME_ERROR: 'Token time expired',
+    TOKEN_DEL_ERROR: 'Can`t delete expired token',
+    TOKEN_AUTH_ERROR: 'No such token in database',
+    VALIDATION_ERROR: 'Validation error',
+    NO_USERS_ERROR: 'No users created'
 };
 
 function validate() {
@@ -80,14 +81,12 @@ function saveUser(user) {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
-            } else if (this.status === 406) {
-                reject(response.message);
             } else {
-                reject(new Error(this.status + 'я тут')); // Change
+                reject(response);
             }
         };
         XHR.onerror = function () {
-            reject(new Error('Connection error'));
+            reject({ message: errorsObj.SERVER_CON_ERROR });
         };
     });
 }
@@ -103,14 +102,12 @@ function signInUser(user) {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
-            } else if (this.status === 406) {
-                reject(response.message);
             } else {
-                reject(new Error(this.status));
+                reject(response);
             }
         };
         XHR.onerror = function () {
-            reject(new Error('Connection error'));
+            reject({ message: errorsObj.SERVER_CON_ERROR });
         };
     });
 }
@@ -127,14 +124,12 @@ function deleteUser(id) {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response.message);
-            } else if (this.status === 403) {
-                reject(response.message);
             } else {
-                reject(new Error(this.status));
+                reject(response);
             }
         };
         XHR.onerror = function () {
-            reject(new Error('Connection error'));
+            reject({ message: errorsObj.SERVER_CON_ERROR });
         };
     });
 }
@@ -151,14 +146,12 @@ function getUserInfo(id, flag) {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(response);
-            } else if (this.status === 403) {
-                reject(response);
             } else {
-                reject(new Error(this.status));
+                reject(response);
             }
         };
         XHR.onerror = function () {
-            reject(new Error('Connection error'));
+            reject({ message: errorsObj.SERVER_CON_ERROR });
         };
     });
 }
@@ -226,14 +219,12 @@ function updateTable() {
             var res = JSON.parse(XHR.response);
             if (this.status === 200) {
                 resolve(res);
-            } else if (this.status === 403 || this.status === 400) {
-                reject(res.message);
             } else {
-                reject(new Error(this.status));
+                reject(res);
             }
         };
         XHR.onerror = function () {
-            reject(new Error('Connection error'));
+            reject({ message: errorsObj.SERVER_CON_ERROR });
         };
     });
 }
@@ -267,14 +258,14 @@ function createTable(usersObj) {
         if (target.className === 'del') {
             deleteUser(targetId)
                 .then(function () {
-                    // showAlertModal(response);
+                    // showAlertModal(response.message);
                     return updateTable();
                 })
                 .then(function (response) {
                     createTable(response);
                 })
                 .catch(function (response) {
-                    showAlertModal(response);
+                    showAlertModal(response.message);
                 });
         }
 
@@ -295,7 +286,7 @@ saveButton.onclick = function () {
     '&pass=' + pass.value + '&role=' + role.value;
 
     if (!validate()) {
-        showAlertModal('Validation error');
+        showAlertModal(errorsObj.VALIDATION_ERROR);
         return;
     }
 
@@ -307,13 +298,13 @@ saveButton.onclick = function () {
                     createTable(response);
                 })
                 .catch(function (response) {
-                    showAlertModal(response);
+                    showAlertModal(response.message);
                 });
         }
         clearForm();
     })
         .catch(function (response) {
-            showAlertModal(response);
+            showAlertModal(response.message);
         });
 
     userForm.setAttribute('action', mainUrl + '/user');
@@ -323,7 +314,7 @@ saveButton.onclick = function () {
 signInButton.onclick = function () {
     var userData = 'username=' + siUsername.value + '&pass=' + siPassword.value;
     if (!validateSignIn()) {
-        showAlertModal('Validation error');
+        showAlertModal(errorsObj.VALIDATION_ERROR);
         return;
     }
 
@@ -338,7 +329,7 @@ signInButton.onclick = function () {
             createTable(response);
         })
         .catch(function (response) {
-            showAlertModal(response);
+            showAlertModal(response.message);
         });
 };
 
@@ -354,7 +345,7 @@ showAll.onclick = function () {
             .catch(function (response) {
                 // console.log(response);
                 // showAlertModal(errorsObj[response]);
-                showAlertModal(response);
+                showAlertModal(response.message);
             });
     }
 };
