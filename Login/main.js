@@ -22,9 +22,9 @@ var query = function (sql, props) {
             }
             connection.query(
                 sql, props,
-                function (err, res) {
-                    if (err) reject({ status: 409, message: 'DB_QUERY_ERROR' });
-                    else resolve(res);
+                function (error, result) {
+                    if (error) reject({ status: 409, message: 'DB_QUERY_ERROR' });
+                    else resolve(result);
                 }
             );
             connection.release();
@@ -61,7 +61,7 @@ function login(user) {
     return checkUserData(user.username, user.pass).then(function (results) {
         if (results.length) return results;
         throw ({ status: 406, message: 'AUTH_ERROR' });
-    }).catch(function(result) {
+    }).catch(function (result) {
         throw ({ status: result.status, message: result.message });
     });
 }
@@ -91,7 +91,7 @@ function deleteUser(id) {
     return query(sql, prop)
         .then(function (result) {
             if (result.affectedRows !== 0) {
-                return ({ status: 200, message: 'User deleted' });
+                return ({ status: 200, message: 'User deleted', id: id });
             }
             return ({ status: 400, message: 'WRONG_ID_ERROR' });
         }).catch(function (result) {
@@ -163,12 +163,13 @@ function deleteToken(id) {
     var prop = id;
 
     return query(sql, prop)
-        .then(function (result) {
-            throw ({ status: 401, message: 'TOKEN_TIME_ERROR' });
-        },
-        function (result) {
-            throw ({ status: result.status, message: result.message });
-        }
+        .then(
+            function (result) {
+                throw ({ status: 401, message: 'TOKEN_TIME_ERROR' });
+            },
+            function (result) {
+                throw ({ status: result.status, message: result.message });
+            }
         );
 }
 
@@ -196,7 +197,7 @@ app.use(function (req, res, next) {
             .then(function (results) {
                 if (!results.length) {
                     body.token = 'anon';
-                    return;
+                    return false;
                 }
                 timestamp = +results[0].timestamp;
                 if (checkTimestamp(timestamp)) {
@@ -309,6 +310,15 @@ app.delete('/user/:id', function (req, res, next) {
 }, function (req, res, next) {
     deleteUser(req.params.id)
         .then(function (result) {
+            var sql;
+            var prop;
+            if (result.id) {
+                sql = 'DELETE FROM `tokens` WHERE `id` = ?';
+                prop = result.id;
+                return query(sql, prop).then(function () {
+                    return res.status(result.status).json({ message: result.message });
+                });
+            }
             return res.status(result.status).json({ message: result.message });
         }).catch(function (result) {
             res.status(result.status).json({ message: result.message });

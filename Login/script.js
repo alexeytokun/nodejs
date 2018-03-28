@@ -40,7 +40,6 @@ var errorsObj = {
     WRONG_ID_ERROR: 'Wrong user id',
     USERNAME_ERROR: 'Not unique username',
     TOKEN_TIME_ERROR: 'Relogin, please',
-    TOKEN_AUTH_ERROR: 'Relogin, please',
     VALIDATION_ERROR: 'Validation error',
     NO_USERS_ERROR: 'No users created'
 };
