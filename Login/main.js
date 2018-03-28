@@ -1,29 +1,52 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
-var port = 8000;
 var mysql = require('mysql');
 var uuidv4 = require('uuid/v4');
+var usersFields = '`id`, `username`, `surname`, `age`, `role`, `password`';
+var tokensFields = '`id`, `uuid`, `timestamp`';
 
-var pool = mysql.createPool({
+var connectionObj = {
     host: 'localhost',
     user: 'root',
     password: '123',
     database: 'newdb',
-    connectionLimit: 100
+    connectionLimit: 100,
+    port: 8000
+};
+
+var pool = mysql.createPool({
+    host: connectionObj.host,
+    user: connectionObj.user,
+    password: connectionObj.password,
+    database: connectionObj.database,
+    connectionLimit: connectionObj.connectionLimit
 });
+
+var errorsObj = {
+    SERVER_CON: 'SERVER_CON_ERROR',
+    ACCESS_DENIED: 'ACCESS_DENIED_ERROR',
+    DB_CON: 'DB_CON_ERROR',
+    DB_QUERY: 'DB_QUERY_ERROR',
+    AUTH: 'AUTH_ERROR',
+    WRONG_ID: 'WRONG_ID_ERROR',
+    USERNAME: 'USERNAME_ERROR',
+    TOKEN_TIME: 'TOKEN_TIME_ERROR',
+    VALIDATION: 'VALIDATION_ERROR',
+    NO_USERS: 'NO_USERS_ERROR'
+};
 
 var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
         pool.getConnection(function (err, connection) {
             if (err) {
-                reject({ status: 409, message: 'DB_CON_ERROR' });
+                reject({ status: 409, message: errorsObj.DB_CON });
                 return;
             }
             connection.query(
                 sql, props,
                 function (error, result) {
-                    if (error) reject({ status: 409, message: 'DB_QUERY_ERROR' });
+                    if (error) reject({ status: 409, message: errorsObj.DB_QUERY });
                     else resolve(result);
                 }
             );
@@ -52,7 +75,7 @@ function vaidate(data) {
 }
 
 function checkUserData(username, password) {
-    var sql = 'SELECT * FROM `users` WHERE `username` = ? AND `password` = ?';
+    var sql = 'SELECT ' + usersFields + ' FROM `users` WHERE `username` = ? AND `password` = ?';
     var prop = [username, password];
     return query(sql, prop);
 }
@@ -60,14 +83,14 @@ function checkUserData(username, password) {
 function login(user) {
     return checkUserData(user.username, user.pass).then(function (results) {
         if (results.length) return results;
-        throw ({ status: 406, message: 'AUTH_ERROR' });
+        throw ({ status: 406, message: errorsObj.AUTH });
     }).catch(function (result) {
         throw ({ status: result.status, message: result.message });
     });
 }
 
 function getAllUseres() {
-    var sql = 'SELECT * FROM `users`';
+    var sql = 'SELECT ' + usersFields + ' FROM `users`';
     return query(sql);
 }
 
@@ -78,7 +101,7 @@ function checkUsername(name) {
 }
 
 function getUserById(id) {
-    var sql = 'SELECT * FROM `users` WHERE `id` = ?';
+    var sql = 'SELECT ' + usersFields + ' FROM `users` WHERE `id` = ?';
     var prop = id;
 
     return query(sql, prop);
@@ -93,7 +116,7 @@ function deleteUser(id) {
             if (result.affectedRows !== 0) {
                 return ({ status: 200, message: 'User deleted', id: id });
             }
-            return ({ status: 400, message: 'WRONG_ID_ERROR' });
+            return ({ status: 400, message: errorsObj.WRONG_ID });
         }).catch(function (result) {
             throw ({ status: result.status, message: result.message });
         });
@@ -107,7 +130,7 @@ function updateUserData(id, data) {
             if (result.affectedRows !== 0) {
                 return ({ status: 200, message: 'User data updated' });
             }
-            return ({ status: 400, message: 'WRONG_ID_ERROR' });
+            return ({ status: 400, message: errorsObj.WRONG_ID });
         }).catch(function (result) {
             throw ({ status: result.status, message: result.message });
         });
@@ -116,7 +139,7 @@ function updateUserData(id, data) {
 function isUnique(username, id) {
     return checkUsername(username).then(function (results) {
         if (!results.length || (+results[0].id === +id)) return;
-        throw ({ status: 406, message: 'USERNAME_ERROR' });
+        throw ({ status: 406, message: errorsObj.USERNAME });
     }).catch(function (result) {
         throw ({ status: result.status, message: result.message });
     });
@@ -149,7 +172,7 @@ function setToken(results) {
 }
 
 function getDataFromToken(uuid) {
-    var sql = 'SELECT * FROM `tokens` WHERE `uuid` = ?';
+    var sql = 'SELECT ' + tokensFields + ' FROM `tokens` WHERE `uuid` = ?';
     var prop = uuid;
     return query(sql, prop);
 }
@@ -165,7 +188,7 @@ function deleteToken(id) {
     return query(sql, prop)
         .then(
             function (result) {
-                throw ({ status: 401, message: 'TOKEN_TIME_ERROR' });
+                throw ({ status: 401, message: errorsObj.TOKEN_TIME });
             },
             function (result) {
                 throw ({ status: result.status, message: result.message });
@@ -238,7 +261,7 @@ app.post('/user', function (req, res, next) {
             });
     } else next();
 }, function (req, res) {
-    res.status(406).json({ message: 'VALIDATION_ERROR' });
+    res.status(406).json({ message: errorsObj.VALIDATION });
 });
 
 app.post('/signin', function (req, res, next) {
@@ -258,12 +281,12 @@ app.post('/signin', function (req, res, next) {
 app.post('/user/:id', function (req, res, next) {
     if (req.body.token === 'guest' || req.body.token === 'anon'
     || ((req.body.token === 'user') && (+req.body.IdToken !== +req.params.id))) {
-        return res.status(403).json({ message: 'ACCESS_DENIED_ERROR' });
+        return res.status(403).json({ message: errorsObj.ACCESS_DENIED });
     }
     return next();
 }, function (req, res, next) {
     if (!vaidate(req.body)) {
-        return res.status(406).json({ message: 'VALIDATION_ERROR' });
+        return res.status(406).json({ message: errorsObj.VALIDATION });
     }
     return next();
 }, function (req, res, next) {
@@ -286,7 +309,7 @@ app.get('/user/:id', function (req, res, next) {
     if ((req.body.token === 'guest' || req.body.token === 'anon'
     || ((req.body.token === 'user') && (+req.body.IdToken !== +req.params.id)))
     && !req.headers.info) {
-        return res.status(403).json({ message: 'ACCESS_DENIED_ERROR' });
+        return res.status(403).json({ message: errorsObj.ACCESS_DENIED });
     }
     return next();
 }, function (req, res, next) {
@@ -295,7 +318,7 @@ app.get('/user/:id', function (req, res, next) {
             if (result.length) {
                 res.json(result[0]);
             } else {
-                res.status(400).json({ message: 'WRONG_ID_ERROR' });
+                res.status(400).json({ message: errorsObj.WRONG_ID });
             }
         }).catch(function (result) {
             res.status(result.status).json({ message: result.message });
@@ -304,7 +327,7 @@ app.get('/user/:id', function (req, res, next) {
 
 app.delete('/user/:id', function (req, res, next) {
     if (req.body.token !== 'admin') {
-        return res.status(403).json({ message: 'ACCESS_DENIED_ERROR' });
+        return res.status(403).json({ message: errorsObj.ACCESS_DENIED });
     }
     return next();
 }, function (req, res, next) {
@@ -332,7 +355,7 @@ app.get('/users', function (req, res, next) {
                 if (results.length) {
                     return res.json(results);
                 }
-                return res.status(400).json({ message: 'NO_USERS_ERROR' });
+                return res.status(400).json({ message: errorsObj.NO_USERS });
             }).catch(function (result) {
                 res.status(result.status).json({ message: result.message });
             });
@@ -346,7 +369,7 @@ app.get('/users', function (req, res, next) {
                 if (result.length) {
                     res.json(result);
                 } else {
-                    res.status(400).json({ message: 'WRONG_ID_ERROR' });
+                    res.status(400).json({ message: errorsObj.WRONG_ID });
                 }
             }).catch(function (result) {
                 res.status(result.status).json({ message: result.message });
@@ -355,12 +378,12 @@ app.get('/users', function (req, res, next) {
         return next();
     }
 }, function (req, res) {
-    res.status(403).json({ message: 'ACCESS_DENIED_ERROR' });
+    res.status(403).json({ message: errorsObj.ACCESS_DENIED });
 });
 
-app.listen(port, function (error) {
+app.listen(connectionObj.port, function (error) {
     if (error) {
         console.log('Error:' + error.name + '\n');
-    } else console.log('Listening port ' + port + '\n');
+    } else console.log('Listening port ' + connectionObj.port + '\n');
 });
 
