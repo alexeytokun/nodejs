@@ -147,12 +147,12 @@ dbObj.isUnique = function (username, id) {
     });
 }
 
-function countTimestamp(min) {
+dbObj.countTimestamp = function (min) {
     return Date.now() + (60000 * min);
 }
 
-function setToken(results) {
-    var timestamp = countTimestamp(20);
+dbObj.setToken = function (results) {
+    var timestamp = dbObj.countTimestamp(20);
     var uuid = uuidv4();
     var sqlUpdate = 'UPDATE `tokens` SET `uuid`=?, `timestamp`=? WHERE id=?';
     var sqlInsert = 'INSERT INTO `tokens` (`uuid`, `timestamp`, `id`) VALUES (?, ?, ?)';
@@ -179,7 +179,7 @@ dbObj.getDataFromToken = function (uuid) {
     return query(sql, prop);
 }
 
-function checkTimestamp(timestamp) {
+dbObj.checkTimestamp = function (timestamp) {
     return (Date.now() < timestamp);
 }
 
@@ -225,7 +225,7 @@ app.use(function (req, res, next) {
                     return false;
                 }
                 timestamp = +results[0].timestamp;
-                if (checkTimestamp(timestamp)) {
+                if (dbObj.checkTimestamp(timestamp)) {
                     return dbObj.getUserById(results[0].id)
                         .then(function (result) {
                             return result;
@@ -269,7 +269,7 @@ app.post('/user', function (req, res, next) {
 app.post('/signin', function (req, res, next) {
     login(req.body)
         .then(function (result) {
-            return setToken(result);
+            return dbObj.setToken(result);
         }).then(function (result) {
             return res.json({
                 authtoken: result
