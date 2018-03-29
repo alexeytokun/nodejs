@@ -36,6 +36,8 @@ var errorsObj = {
     NO_USERS: 'NO_USERS_ERROR'
 };
 
+var dbObj = {};
+
 var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
         pool.getConnection(function (err, connection) {
@@ -60,7 +62,7 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-function addUserToDb(username, surname, age, pass, role) {
+dbObj.addUserToDb = function (username, surname, age, pass, role) {
     var sql = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
     var userData = [username, surname, age, role, pass];
     return query(sql, userData);
@@ -74,14 +76,14 @@ function vaidate(data) {
     return test;
 }
 
-function checkUserData(username, password) {
+dbObj.checkUserData = function (username, password) {
     var sql = 'SELECT ' + usersFields + ' FROM `users` WHERE `username` = ? AND `password` = ?';
     var prop = [username, password];
     return query(sql, prop);
 }
 
 function login(user) {
-    return checkUserData(user.username, user.pass).then(function (results) {
+    return dbObj.checkUserData(user.username, user.pass).then(function (results) {
         if (results.length) return results;
         throw ({ status: 406, message: errorsObj.AUTH });
     }).catch(function (result) {
@@ -89,25 +91,25 @@ function login(user) {
     });
 }
 
-function getAllUseres() {
+dbObj.getAllUseres = function () {
     var sql = 'SELECT ' + usersFields + ' FROM `users`';
     return query(sql);
 }
 
-function checkUsername(name) {
+dbObj.checkUsername = function (name) {
     var sql = 'SELECT `id` FROM `users` WHERE `username` = ?';
     var prop = [name];
     return query(sql, prop);
 }
 
-function getUserById(id) {
+dbObj.getUserById = function (id) {
     var sql = 'SELECT ' + usersFields + ' FROM `users` WHERE `id` = ?';
     var prop = id;
 
     return query(sql, prop);
 }
 
-function deleteUser(id) {
+dbObj.deleteUser = function (id) {
     var sql = 'DELETE FROM `users` WHERE `id` = ?';
     var prop = id;
 
@@ -122,7 +124,7 @@ function deleteUser(id) {
         });
 }
 
-function updateUserData(id, data) {
+dbObj.updateUserData = function (id, data) {
     var sql = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=? WHERE id=?';
     var prop = [data.username, data.surname, data.age, data.role, data.pass, id];
     return query(sql, prop)
@@ -136,8 +138,8 @@ function updateUserData(id, data) {
         });
 }
 
-function isUnique(username, id) {
-    return checkUsername(username).then(function (results) {
+dbObj.isUnique = function (username, id) {
+    return dbObj.checkUsername(username).then(function (results) {
         if (!results.length || (+results[0].id === +id)) return;
         throw ({ status: 406, message: errorsObj.USERNAME });
     }).catch(function (result) {
@@ -171,7 +173,7 @@ function setToken(results) {
         });
 }
 
-function getDataFromToken(uuid) {
+dbObj.getDataFromToken = function (uuid) {
     var sql = 'SELECT ' + tokensFields + ' FROM `tokens` WHERE `uuid` = ?';
     var prop = uuid;
     return query(sql, prop);
@@ -181,7 +183,7 @@ function checkTimestamp(timestamp) {
     return (Date.now() < timestamp);
 }
 
-function deleteToken(id) {
+dbObj.deleteToken = function (id) {
     var sql = 'DELETE FROM `tokens` WHERE `id` = ?';
     var prop = id;
 
@@ -216,7 +218,7 @@ app.use(function (req, res, next) {
             body.token = 'anon';
             return next();
         }
-        getDataFromToken(headerAuthToken)
+        dbObj.getDataFromToken(headerAuthToken)
             .then(function (results) {
                 if (!results.length) {
                     body.token = 'anon';
@@ -224,14 +226,14 @@ app.use(function (req, res, next) {
                 }
                 timestamp = +results[0].timestamp;
                 if (checkTimestamp(timestamp)) {
-                    return getUserById(results[0].id)
+                    return dbObj.getUserById(results[0].id)
                         .then(function (result) {
                             return result;
                         }).catch(function (result) {
                             throw ({ status: result.status, message: result.message })
                         });
                 }
-                return deleteToken(results[0].id);
+                return dbObj.deleteToken(results[0].id);
             }).then(function (result) {
                 if (result) {
                     body.token = result[0].role;
@@ -246,14 +248,14 @@ app.use(function (req, res, next) {
 });
 
 app.post('/user', function (req, res, next) {
-    isUnique(req.body.username).then(function () {
+    dbObj.isUnique(req.body.username).then(function () {
         next();
     }).catch(function (result) {
         return res.status(result.status).json({ message: result.message });
     });
 }, function (req, res, next) {
     if (vaidate(req.body)) {
-        addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role)
+        dbObj.addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role)
             .then(function (result) {
                 return res.json({ message: result.insertId });
             }).catch(function (result) {
@@ -290,14 +292,14 @@ app.post('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-    isUnique(req.body.username, req.params.id)
+    dbObj.isUnique(req.body.username, req.params.id)
         .then(function (result) {
             next();
         }).catch(function (result) {
             return res.status(result.status).json({ message: result.message });
         });
 }, function (req, res, next) {
-    updateUserData(req.params.id, req.body)
+    dbObj.updateUserData(req.params.id, req.body)
         .then(function (result) {
             return res.status(result.status).json({ message: result.message });
         }).catch(function (result) {
@@ -313,7 +315,7 @@ app.get('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-    getUserById(req.params.id)
+    dbObj.getUserById(req.params.id)
         .then(function (result) {
             if (result.length) {
                 res.json(result[0]);
@@ -331,7 +333,7 @@ app.delete('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-    deleteUser(req.params.id)
+    dbObj.deleteUser(req.params.id)
         .then(function (result) {
             var sql;
             var prop;
@@ -350,7 +352,7 @@ app.delete('/user/:id', function (req, res, next) {
 
 app.get('/users', function (req, res, next) {
     if (req.body.token === 'admin' || req.body.token === 'user') {
-        getAllUseres()
+        dbObj.getAllUseres()
             .then(function (results) {
                 if (results.length) {
                     return res.json(results);
@@ -364,7 +366,7 @@ app.get('/users', function (req, res, next) {
     }
 }, function (req, res, next) {
     if (req.body.token === 'guest') {
-        getUserById(req.body.IdToken)
+        dbObj.getUserById(req.body.IdToken)
             .then(function (result) {
                 if (result.length) {
                     res.json(result);
