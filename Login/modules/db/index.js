@@ -1,5 +1,6 @@
 var mysql = require('mysql');
 var uuidv4 = require('uuid/v4');
+var errorsObj = require('../errors');
 var usersFields = '`id`, `username`, `surname`, `age`, `role`, `password`';
 var tokensFields = '`id`, `uuid`, `timestamp`';
 var connectionObj = require('../connection');
@@ -11,21 +12,6 @@ var pool = mysql.createPool({
     database: connectionObj.database,
     connectionLimit: connectionObj.connectionLimit
 });
-
-var errorsObj = {
-    SERVER_CON: 'SERVER_CON_ERROR',
-    ACCESS_DENIED: 'ACCESS_DENIED_ERROR',
-    DB_CON: 'DB_CON_ERROR',
-    DB_QUERY: 'DB_QUERY_ERROR',
-    AUTH: 'AUTH_ERROR',
-    WRONG_ID: 'WRONG_ID_ERROR',
-    USERNAME: 'USERNAME_ERROR',
-    TOKEN_TIME: 'TOKEN_TIME_ERROR',
-    VALIDATION: 'VALIDATION_ERROR',
-    NO_USERS: 'NO_USERS_ERROR'
-};
-
-var dbObj = {};
 
 var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
@@ -45,6 +31,12 @@ var query = function (sql, props) {
         });
     });
 };
+
+var dbObj = {};
+
+function countTimestamp(min) {
+    return Date.now() + (60000 * min);
+}
 
 dbObj.addUserToDb = function (username, surname, age, pass, role) {
     var sql = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
@@ -86,7 +78,8 @@ dbObj.deleteUser = function (id) {
                 return ({ status: 200, message: 'User deleted', id: id });
             }
             return ({ status: 400, message: errorsObj.WRONG_ID });
-        }).catch(function (result) {
+        })
+        .catch(function (result) {
             console.log('rej' + result);
             throw ({ status: result.status, message: result.message });
         });
@@ -101,26 +94,25 @@ dbObj.updateUserData = function (id, data) {
                 return ({ status: 200, message: 'User data updated' });
             }
             return ({ status: 400, message: errorsObj.WRONG_ID });
-        }).catch(function (result) {
+        })
+        .catch(function (result) {
             throw ({ status: result.status, message: result.message });
         });
 }
 
 dbObj.isUnique = function (username, id) {
-    return dbObj.checkUsername(username).then(function (results) {
-        if (!results.length || (+results[0].id === +id)) return;
-        throw ({ status: 406, message: errorsObj.USERNAME });
-    }).catch(function (result) {
-        throw ({ status: result.status, message: result.message });
-    });
-}
-
-dbObj.countTimestamp = function (min) {
-    return Date.now() + (60000 * min);
+    return dbObj.checkUsername(username)
+        .then(function (results) {
+            if (!results.length || (+results[0].id === +id)) return;
+            throw ({ status: 406, message: errorsObj.USERNAME });
+        })
+        .catch(function (result) {
+            throw ({ status: result.status, message: result.message });
+        });
 }
 
 dbObj.setToken = function (results) {
-    var timestamp = dbObj.countTimestamp(20);
+    var timestamp = countTimestamp(20);
     var uuid = uuidv4();
     var sqlUpdate = 'UPDATE `tokens` SET `uuid`=?, `timestamp`=? WHERE id=?';
     var sqlInsert = 'INSERT INTO `tokens` (`uuid`, `timestamp`, `id`) VALUES (?, ?, ?)';
@@ -133,10 +125,12 @@ dbObj.setToken = function (results) {
             return query(sqlInsert, userData)
                 .then(function (res) {
                     return uuid;
-                }).catch(function (res) {
+                })
+                .catch(function (res) {
                     throw ({ status: res.status, message: res.message });
                 });
-        }).catch(function (result) {
+        })
+        .catch(function (result) {
             throw ({ status: result.status, message: result.message });
         });
 }
