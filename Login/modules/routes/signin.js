@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var dbObj = require('../db');
-var errorsObj = require('../errors');
+var errorsObj = require('../config/errors');
 
 function login(user) {
     return dbObj.checkUserData(user.username, user.pass)

@@ -1,25 +1,21 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
-var connectionObj = require('./modules/connection');
-var auth = require('./modules/routes/auth');
-var user = require('./modules/routes/user');
-var users = require('./modules/routes/users');
-var signin = require('./modules/routes/signin');
+var modules = require('./modules');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-app.use('/', auth);
-app.use('/signin', signin);
-app.use('/user', user);
-app.use('/users', users);
+app.use('/', modules.auth);
+app.use('/signin', modules.signin);
+app.use('/user', modules.user);
+app.use('/users', modules.users);
 
-app.listen(connectionObj.port, function (error) {
+app.listen(modules.connectionObj.port, function (error) {
     if (error) {
         console.log('Error:' + error.name + '\n');
-    } else console.log('Listening port ' + connectionObj.port + '\n');
+    } else console.log('Listening port ' + modules.connectionObj.port + '\n');
 });
 

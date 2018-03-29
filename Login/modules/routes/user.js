@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var dbObj = require('../db');
-var errorsObj = require('../errors');
-var validate = require('../validation');
+var errorsObj = require('../config/errors');
+var validate = require('../config/validation');
 
 router.post('/', function (req, res, next) {
     dbObj.isUnique(req.body.username)

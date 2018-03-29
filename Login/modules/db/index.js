@@ -1,9 +1,9 @@
 var mysql = require('mysql');
 var uuidv4 = require('uuid/v4');
-var errorsObj = require('../errors');
+var errorsObj = require('../config/errors');
 var usersFields = '`id`, `username`, `surname`, `age`, `role`, `password`';
 var tokensFields = '`id`, `uuid`, `timestamp`';
-var connectionObj = require('../connection');
+var connectionObj = require('../config/connection');
 
 var pool = mysql.createPool({
     host: connectionObj.host,
@@ -42,31 +42,31 @@ dbObj.addUserToDb = function (username, surname, age, pass, role) {
     var sql = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
     var userData = [username, surname, age, role, pass];
     return query(sql, userData);
-}
+};
 
 dbObj.checkUserData = function (username, password) {
     var sql = 'SELECT ' + usersFields + ' FROM `users` WHERE `username` = ? AND `password` = ?';
     var prop = [username, password];
     return query(sql, prop);
-}
+};
 
 dbObj.getAllUseres = function () {
     var sql = 'SELECT ' + usersFields + ' FROM `users`';
     return query(sql);
-}
+};
 
 dbObj.checkUsername = function (name) {
     var sql = 'SELECT `id` FROM `users` WHERE `username` = ?';
     var prop = [name];
     return query(sql, prop);
-}
+};
 
 dbObj.getUserById = function (id) {
     var sql = 'SELECT ' + usersFields + ' FROM `users` WHERE `id` = ?';
     var prop = id;
 
     return query(sql, prop);
-}
+};
 
 dbObj.deleteUser = function (id) {
     var sql = 'DELETE FROM `users` WHERE `id` = ?';
@@ -83,7 +83,7 @@ dbObj.deleteUser = function (id) {
             console.log('rej' + result);
             throw ({ status: result.status, message: result.message });
         });
-}
+};
 
 dbObj.updateUserData = function (id, data) {
     var sql = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=? WHERE id=?';
@@ -98,7 +98,7 @@ dbObj.updateUserData = function (id, data) {
         .catch(function (result) {
             throw ({ status: result.status, message: result.message });
         });
-}
+};
 
 dbObj.isUnique = function (username, id) {
     return dbObj.checkUsername(username)
@@ -109,7 +109,7 @@ dbObj.isUnique = function (username, id) {
         .catch(function (result) {
             throw ({ status: result.status, message: result.message });
         });
-}
+};
 
 dbObj.setToken = function (results) {
     var timestamp = countTimestamp(20);
@@ -133,17 +133,17 @@ dbObj.setToken = function (results) {
         .catch(function (result) {
             throw ({ status: result.status, message: result.message });
         });
-}
+};
 
 dbObj.getDataFromToken = function (uuid) {
     var sql = 'SELECT ' + tokensFields + ' FROM `tokens` WHERE `uuid` = ?';
     var prop = uuid;
     return query(sql, prop);
-}
+};
 
 dbObj.checkTimestamp = function (timestamp) {
     return (Date.now() < timestamp);
-}
+};
 
 dbObj.deleteToken = function (id) {
     var sql = 'DELETE FROM `tokens` WHERE `id` = ?';
@@ -158,12 +158,12 @@ dbObj.deleteToken = function (id) {
                 throw ({ status: result.status, message: result.message });
             }
         );
-}
+};
 
 dbObj.deleteUnusedToken = function (id) {
     var sql = 'DELETE FROM `tokens` WHERE `id` = ?';
     var prop = id;
     return query(sql, prop);
-}
+};
 
 module.exports = dbObj;
