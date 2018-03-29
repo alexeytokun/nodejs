@@ -1,85 +1,16 @@
 var express = require('express');
 var router = express.Router();
 var dbObj = require('../db');
+var errorsObj = require('../errors');
+var validate = require('../validation')
 
-var errorsObj = {
-    SERVER_CON: 'SERVER_CON_ERROR',
-    ACCESS_DENIED: 'ACCESS_DENIED_ERROR',
-    DB_CON: 'DB_CON_ERROR',
-    DB_QUERY: 'DB_QUERY_ERROR',
-    AUTH: 'AUTH_ERROR',
-    WRONG_ID: 'WRONG_ID_ERROR',
-    USERNAME: 'USERNAME_ERROR',
-    TOKEN_TIME: 'TOKEN_TIME_ERROR',
-    VALIDATION: 'VALIDATION_ERROR',
-    NO_USERS: 'NO_USERS_ERROR'
-};
-
-function vaidate(data) {
-    var usernameRegex = /^[а-яА-ЯёЁa-zA-Z-]{1,30}$/;
-    var ageRegex = /^[0-9]{1,2}$/;
-    var test = usernameRegex.test(String(data.username)) && usernameRegex.test(String(data.surname))
-        && ageRegex.test(String(data.age));
-    return test;
-}
-
-function login(user) {
-    return dbObj.checkUserData(user.username, user.pass).then(function (results) {
-        if (results.length) return results;
-        throw ({ status: 406, message: errorsObj.AUTH });
-    }).catch(function (result) {
-        throw ({ status: result.status, message: result.message });
-    });
-}
-
-router.use(function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', '*');
-    res.header('Access-Control-Allow-Methods', '*');
-
-    next();
-});
-
-router.use(function (req, res, next) {
-    var body;
-    var headerAuthToken;
-    var timestamp;
-
-    if (req.method !== 'OPTIONS') {
-        body = req.body;
-        headerAuthToken = String(req.headers['user-auth-token']);
-        if (headerAuthToken === 'undefined') {
-            body.token = 'anon';
-            return next();
-        }
-        dbObj.getDataFromToken(headerAuthToken)
-            .then(function (results) {
-                if (!results.length) {
-                    body.token = 'anon';
-                    return false;
-                }
-                timestamp = +results[0].timestamp;
-                if (dbObj.checkTimestamp(timestamp)) {
-                    return dbObj.getUserById(results[0].id)
-                        .then(function (result) {
-                            return result;
-                        }).catch(function (result) {
-                            throw ({ status: result.status, message: result.message })
-                        });
-                }
-                return dbObj.deleteToken(results[0].id);
-            }).then(function (result) {
-            if (result) {
-                body.token = result[0].role;
-                body.IdToken = result[0].id;
-            }
-            return next();
-        }).catch(function (result) {
-            body.token = 'anon';
-            return res.status(result.status).json({ message: result.message });
-        });
-    } else return next();
-});
+// function validate(data) {
+//     var usernameRegex = /^[а-яА-ЯёЁa-zA-Z-]{1,30}$/;
+//     var ageRegex = /^[0-9]{1,2}$/;
+//     var test = usernameRegex.test(String(data.username)) && usernameRegex.test(String(data.surname))
+//         && ageRegex.test(String(data.age));
+//     return test;
+// }
 
 router.post('/user', function (req, res, next) {
     dbObj.isUnique(req.body.username).then(function () {
@@ -88,7 +19,7 @@ router.post('/user', function (req, res, next) {
         return res.status(result.status).json({ message: result.message });
     });
 }, function (req, res, next) {
-    if (vaidate(req.body)) {
+    if (validate(req.body)) {
         dbObj.addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role)
             .then(function (result) {
                 return res.json({ message: result.insertId });
@@ -107,7 +38,7 @@ router.post('/user/:id', function (req, res, next) {
     }
     return next();
 }, function (req, res, next) {
-    if (!vaidate(req.body)) {
+    if (!validate(req.body)) {
         return res.status(406).json({ message: errorsObj.VALIDATION });
     }
     return next();
@@ -197,20 +128,6 @@ router.get('/users', function (req, res, next) {
     }
 }, function (req, res) {
     res.status(403).json({ message: errorsObj.ACCESS_DENIED });
-});
-
-router.post('/signin', function (req, res, next) {
-    login(req.body)
-        .then(function (result) {
-            return dbObj.setToken(result);
-        }).then(function (result) {
-        return res.json({
-            authtoken: result
-        });
-    })
-        .catch(function (result) {
-            res.status(result.status).json({ message: result.message });
-        });
 });
 
 module.exports = router;
