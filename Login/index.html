@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Users</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="signin" class="modal">
+    <form action="http://127.0.0.1:8000/signin" method="post" id="si_form" autocomplete="off" class='modal-content'>
+        <span class="close">&times;</span>
+        <input id="si_username" name="username" type="text" placeholder="Name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+        <input id="si_password" name="password1" type="password" placeholder="Password" pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{8,}$" required>
+        <input id="si_switch" type="button" value="Go to Sign Up">
+        <input id="si_save" type="button" value="SIGN IN">
+    </form>
+</div>
+
+<div id="modalWindow" class="modal important">
+    <div class='modal-content'>
+      <span id="closeWindow" class="close">&times;</span>
+      <p id="alert"></p>
+    </div>
+</div>
+
+<div id="wrapper" class="wrapper">
+    <img src="BWLogo.png">
+    <div id="myModal" class="modal">
+        <form action="http://127.0.0.1:8000/user" method="post" id="userform" autocomplete="off" class='modal-content'>
+            <span class="close">&times;</span>
+            <input id="username" name="username" type="text" placeholder="Name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="surname" name="surname" type="text" placeholder="Surname" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="age" name="age" type="text" placeholder="Age" pattern="[0-9]{1,2}" required>
+            <input id="pass" name="pass" type="password" placeholder="Password" pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{8,}$" required>
+            <input id="pass2" name="pass2" type="password" placeholder="Password" pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{8,}$" required>
+            <select name="role" id="role">
+                <option value="guest">Guest</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select>
+            <input id="switch" type="button" value="Go to Sign In">
+            <input id="save" type="button" value="Save">
+        </form>
+    </div>
+    
+    <button class='btn' id="showall">Show all users</button>
+    <button class='btn' id="createuser">Create new user</button>
+    <button class='btn' id="showsignin">Sign In</button>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
