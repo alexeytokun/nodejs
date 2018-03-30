@@ -1,17 +1,8 @@
-var mysql = require('mysql');
 var uuidv4 = require('uuid/v4');
 var errorsObj = require('../config/errors');
 var usersFields = '`id`, `username`, `surname`, `age`, `role`, `password`';
 var tokensFields = '`id`, `uuid`, `timestamp`';
-var connectionObj = require('../config/connection');
-
-var pool = mysql.createPool({
-    host: connectionObj.host,
-    user: connectionObj.user,
-    password: connectionObj.password,
-    database: connectionObj.database,
-    connectionLimit: connectionObj.connectionLimit
-});
+var pool = require('../config/connection').pool;
 
 var query = function (sql, props) {
     return new Promise(function (resolve, reject) {

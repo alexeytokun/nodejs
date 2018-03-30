@@ -1,7 +1,7 @@
-CREATE DATABASE newdb;
+CREATE DATABASE IF NOT EXISTS newdb;
 USE newdb;
 
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
     `id` INT(11) AUTO_INCREMENT,
     `username` VARCHAR(30) COLLATE utf8_bin,
     `surname` VARCHAR(30),
@@ -11,9 +11,11 @@ CREATE TABLE `users` (
     PRIMARY KEY(`id`)
 );
 
-CREATE TABLE `tokens` (
+CREATE TABLE IF NOT EXISTS `tokens` (
     `id` INT(11),
     `uuid` VARCHAR(40),
     `timestamp` BIGINT(15),
     PRIMARY KEY(`id`)
 );
+
+

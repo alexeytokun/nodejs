@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var dbObj = require('../db');
+var dbObj = require('../db/users');
 var errorsObj = require('../config/errors');
 
 router.get('/', function (req, res, next) {
