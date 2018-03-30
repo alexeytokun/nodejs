@@ -3,7 +3,7 @@ USE newdb;
 
 CREATE TABLE `users` (
     `id` INT(11) AUTO_INCREMENT,
-    `username` VARCHAR(30),
+    `username` VARCHAR(30) COLLATE utf8_bin,
     `surname` VARCHAR(30),
     `age` TINYINT(3),
     `role` VARCHAR(15),

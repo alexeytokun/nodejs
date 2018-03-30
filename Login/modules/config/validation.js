@@ -1,8 +1,10 @@
+var regex = require('./regex');
+
 function validate(data) {
-    var usernameRegex = /^[а-яА-ЯёЁa-zA-Z-]{1,30}$/;
-    var ageRegex = /^[0-9]{1,2}$/;
-    var test = usernameRegex.test(String(data.username)) && usernameRegex.test(String(data.surname))
-        && ageRegex.test(String(data.age));
+    var test = regex.usernameRegex.test(String(data.username))
+        && regex.usernameRegex.test(String(data.surname))
+        && regex.ageRegex.test(String(data.age))
+        && regex.passRegex.test(String(data.pass));
     return test;
 }
 

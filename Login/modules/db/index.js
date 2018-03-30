@@ -56,7 +56,7 @@ dbObj.getAllUseres = function () {
 };
 
 dbObj.checkUsername = function (name) {
-    var sql = 'SELECT `id` FROM `users` WHERE `username` = ?';
+    var sql = 'SELECT `id` FROM `users` WHERE `username` = ? COLLATE utf8_unicode_ci';
     var prop = [name];
     return query(sql, prop);
 };
