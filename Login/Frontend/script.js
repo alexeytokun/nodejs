@@ -334,6 +334,32 @@ function getCountries() {
     });
 }
 
+function getCities(id) {
+    return new Promise(function (resolve, reject) {
+        var url = mainUrl + '/city/' + id;
+        var XHR = new XMLHttpRequest();
+        XHR.open('GET', url);
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
+        XHR.send();
+        clearForm();
+        XHR.onload = function () {
+            var response = JSON.parse(XHR.response);
+            if (this.status === 200) {
+                console.log(response);
+                resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
+            } else {
+                reject(response);
+            }
+        };
+        XHR.onerror = function () {
+            reject({ message: 'SERVER_CON_ERROR' });
+        };
+    });
+}
+
 saveButton.onclick = function () {
     var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
     '&pass=' + pass.value + '&role=' + role.value;
@@ -462,3 +488,19 @@ signUpSwitch.onclick = function () {
 modalAlertCloseButton.onclick = function () {
     modalAlert.classList.remove('show');
 };
+
+country.onchange = function () {
+    getCities(country.value)
+        .then(function (response) {
+            city.innerHTML = '';
+            response.forEach(function (element) {
+                var opt = document.createElement('option');
+                opt.setAttribute('value', String(element.city_id));
+                opt.innerHTML = element.name;
+                city.appendChild(opt);
+            });
+        })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        })
+}

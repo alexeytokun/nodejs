@@ -1,5 +1,5 @@
 var errorsObj = require('../config/errors');
-var countriesFields = '`country_id`, `name`';
+var citiesFields = '`city_id`, `name`, `country_id`';
 var pool = require('../config/connection').pool;
 
 var query = function (sql, props) {
@@ -21,13 +21,13 @@ var query = function (sql, props) {
     });
 };
 
-var dbCountryObj = {};
+var dbCityObj = {};
 
-dbCountryObj.getCountries = function () {
-    var sql = 'SELECT ' + countriesFields + ' FROM `countries`';
-    var prop = '';
+dbCityObj.getCities = function (id) {
+    var sql = 'SELECT ' + citiesFields + ' FROM `cities` WHERE `country_id` = ?';
+    var prop = id;
 
     return query(sql, prop);
 };
 
-module.exports = dbCountryObj;
+module.exports = dbCityObj;
