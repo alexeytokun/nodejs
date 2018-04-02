@@ -29,9 +29,10 @@ function countTimestamp(min) {
     return Date.now() + (60000 * min);
 }
 
-dbObj.addUserToDb = function (username, surname, age, pass, role) {
-    var sql = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`) VALUES (?, ?, ?, ?, ?)';
-    var userData = [username, surname, age, role, pass];
+dbObj.addUserToDb = function (username, surname, age, pass, role, country, city, school, bio) {
+    var sql = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`, `country_id`, `city_id`, `school_id`, `bio`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    var userData = [username, surname, age, role, pass, country, city, school, bio];
+    console.log(userData);
     return query(sql, userData);
 };
 

@@ -34,7 +34,7 @@ var alertText = document.getElementById('alert');
 var country = document.getElementById('country');
 var city = document.getElementById('city');
 var school = document.getElementById('school');
-var bio = document.getElementById('school');
+var bio = document.getElementById('bio');
 
 var errorsObj = {
     SERVER_CON_ERROR: 'Server connection error',
@@ -315,7 +315,6 @@ function getCountries() {
         XHR.open('GET', url);
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
         XHR.send();
-        clearForm();
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
@@ -341,7 +340,6 @@ function getCities(id) {
         XHR.open('GET', url);
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
         XHR.send();
-        clearForm();
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
@@ -367,7 +365,6 @@ function getSchools(id) {
         XHR.open('GET', url);
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
         XHR.send();
-        clearForm();
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
@@ -388,7 +385,9 @@ function getSchools(id) {
 
 saveButton.onclick = function () {
     var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
-    '&pass=' + pass.value + '&role=' + role.value;
+    '&pass=' + pass.value + '&role=' + role.value + '&country=' + country.value + '&city=' + city.value +
+    '&school=' + school.value + '&bio=' + bio.value;
+    console.log(user);
 
     if (!validate()) {
         showAlertModal(errorsObj.VALIDATION_ERROR);
@@ -535,7 +534,7 @@ country.onchange = function (event) {
         })
         .catch(function (response) {
             showAlertModal(errorsObj[response.message]);
-        })
+        });
 }
 
 city.onchange = function (event) {
@@ -544,6 +543,7 @@ city.onchange = function (event) {
         return;
     }
     getSchools(city.value)
+
         .then(function (response) {
             school.innerHTML = '<option value="0">Select School</option>';
             response.forEach(function (element) {
