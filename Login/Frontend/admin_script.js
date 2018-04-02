@@ -4,7 +4,6 @@ var authHeader;
 var wrapper = document.getElementById('wrapper');
 var saveButton = document.getElementById('save');
 var newUserButton = document.getElementById('createuser');
-var showSignIn = document.getElementById('showsignin');
 var showAll = document.getElementById('showall');
 
 var userForm = document.getElementById('userform');
@@ -16,16 +15,7 @@ var pass2 = document.getElementById('pass2');
 var role = document.getElementById('role');
 
 var modal = document.getElementById('myModal');
-var span = document.getElementsByClassName('close')[2];
-var spanSignIn = document.getElementsByClassName('close')[0];
-
-var signIn = document.getElementById('signin');
-var signInButton = document.getElementById('si_save');
-var siUsername = document.getElementById('si_username');
-var siPassword = document.getElementById('si_password');
-
-var signInSwitch = document.getElementById('si_switch');
-var signUpSwitch = document.getElementById('switch');
+var span = document.getElementsByClassName('close')[1];
 
 var modalAlert = document.getElementById('modalWindow');
 var modalAlertCloseButton = document.getElementById('closeWindow');
@@ -51,17 +41,13 @@ var errorsObj = {
 
 function validate() {
     return username.checkValidity() && surname.checkValidity() &&
-    age.checkValidity() && pass.checkValidity() &&
-    pass2.checkValidity() && (pass.value === pass2.value);
+        age.checkValidity() && pass.checkValidity() &&
+        pass2.checkValidity() && (pass.value === pass2.value);
 }
 
 function showAlertModal(info) {
     modalAlert.classList.add('show');
     alertText.innerHTML = info;
-}
-
-function validateSignIn() {
-    return siUsername.checkValidity() && siPassword.checkValidity();
 }
 
 function clearForm() {
@@ -78,7 +64,6 @@ function logOut() {
         elem = document.getElementById('userstable');
         elem.parentNode.removeChild(elem);
     }
-    signIn.classList.toggle('show');
 }
 
 function saveUser(user) {
@@ -88,30 +73,6 @@ function saveUser(user) {
         XHR.open('POST', url);
         XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
-        XHR.send(user);
-        XHR.onload = function () {
-            var response = JSON.parse(XHR.response);
-            if (this.status === 200) {
-                resolve(response);
-            } else if (this.status === 401) {
-                logOut();
-                reject(response);
-            } else {
-                reject(response);
-            }
-        };
-        XHR.onerror = function () {
-            reject({ message: 'SERVER_CON_ERROR' });
-        };
-    });
-}
-
-function signInUser(user) {
-    return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/signin';
-        var XHR = new XMLHttpRequest();
-        XHR.open('POST', url);
-        XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         XHR.send(user);
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
@@ -218,8 +179,8 @@ function editUser(id) {
             modal.classList.add('show');
             userForm.setAttribute('action', mainUrl + '/user/' + id);
         }).catch(function (response) {
-            showAlertModal(errorsObj[response.message]);
-        });
+        showAlertModal(errorsObj[response.message]);
+    });
 }
 
 function showUser(id) {
@@ -227,8 +188,8 @@ function showUser(id) {
         .then(function (response) {
             showUserInfo(response);
         }).catch(function (response) {
-            showAlertModal(errorsObj[response.message]);
-        });
+        showAlertModal(errorsObj[response.message]);
+    });
 }
 
 function updateTable() {
@@ -382,8 +343,8 @@ function getSchools(id) {
 
 saveButton.onclick = function () {
     var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
-    '&pass=' + pass.value + '&role=' + role.value + '&country=' + country.value + '&city=' + city.value +
-    '&school=' + school.value + '&bio=' + bio.value;
+        '&pass=' + pass.value + '&role=' + role.value + '&country=' + country.value + '&city=' + city.value +
+        '&school=' + school.value + '&bio=' + bio.value;
 
     if (!validate()) {
         showAlertModal(errorsObj.VALIDATION_ERROR);
@@ -409,30 +370,6 @@ saveButton.onclick = function () {
 
     userForm.setAttribute('action', mainUrl + '/user');
     modal.classList.remove('show');
-};
-
-signInButton.onclick = function () {
-    var userData = 'username=' + siUsername.value + '&pass=' + siPassword.value;
-    if (!validateSignIn()) {
-        showAlertModal(errorsObj.VALIDATION_ERROR);
-        return;
-    }
-
-
-    signInUser(userData)
-        .then(function (response) {
-            signIn.classList.remove('show');
-            authHeader = response.authtoken;
-            return updateTable();
-        })
-        .then(function (response) {
-            createTable(response);
-            siUsername.value = '';
-            siPassword.value = '';
-        })
-        .catch(function (response) {
-            showAlertModal(errorsObj[response.message]);
-        });
 };
 
 showAll.onclick = function () {
@@ -467,18 +404,11 @@ newUserButton.onclick = function () {
         })
 };
 
-showSignIn.onclick = function () {
-    signIn.classList.toggle('show');
-};
 
 span.onclick = function () {
     modal.classList.remove('show');
     userForm.setAttribute('action', mainUrl + '/user');
     clearForm();
-};
-
-spanSignIn.onclick = function () {
-    signIn.classList.remove('show');
 };
 
 window.onclick = function (event) {
@@ -488,23 +418,9 @@ window.onclick = function (event) {
         clearForm();
     }
 
-    if (event.target === signIn) {
-        signIn.classList.remove('show');
-    }
-
     if (event.target === modalAlert) {
         modalAlert.classList.remove('show');
     }
-};
-
-signInSwitch.onclick = function () {
-    modal.classList.toggle('show');
-    signIn.classList.toggle('show');
-};
-
-signUpSwitch.onclick = function () {
-    modal.classList.toggle('show');
-    signIn.classList.toggle('show');
 };
 
 modalAlertCloseButton.onclick = function () {

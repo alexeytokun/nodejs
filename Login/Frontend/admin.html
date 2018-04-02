@@ -4,25 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Users</title>
+    <title>Admin</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<a href="admin.html">Be admin</a>
-<div id="signin" class="modal">
-    <form action="http://127.0.0.1:8000/signin" method="post" id="si_form" autocomplete="off" class='modal-content'>
-        <span class="close">&times;</span>
-        <input id="si_username" name="username" type="text" placeholder="Name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
-        <input id="si_password" name="password1" type="password" placeholder="Password" pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{8,}$" required>
-        <input id="si_switch" type="button" value="Go to Sign Up">
-        <input id="si_save" type="button" value="SIGN IN">
-    </form>
-</div>
 
 <div id="modalWindow" class="modal important">
     <div class='modal-content'>
-      <span id="closeWindow" class="close">&times;</span>
-      <p id="alert"></p>
+        <span id="closeWindow" class="close">&times;</span>
+        <p id="alert"></p>
     </div>
 </div>
 
@@ -49,11 +39,10 @@
             <input id="save" type="button" value="Save">
         </form>
     </div>
-    
+
     <button class='btn' id="showall">Show all users</button>
     <button class='btn' id="createuser">Create new user</button>
-    <button class='btn' id="showsignin">Sign In</button>
 </div>
-<script src="script.js"></script>
+<script src="admin_script.js"></script>
 </body>
 </html>
