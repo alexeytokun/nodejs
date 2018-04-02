@@ -23,11 +23,17 @@ var query = function (sql, props) {
 
 var dbSchoolObj = {};
 
+dbSchoolObj.getAllSchools = function () {
+    // var sql = 'SELECT ' + schoolsFields + ' FROM `schools` WHERE `city_id` = ?';
+    var sql = 'SELECT s.school_id, s.name, c.name AS city FROM schools AS s JOIN schools_to_cities AS stc ON s.school_id = stc.school_id LEFT JOIN cities AS c ON c.city_id = stc.city_id';
+    var prop = '';
+    return query(sql, prop);
+};
+
 dbSchoolObj.getSchools = function (id) {
     // var sql = 'SELECT ' + schoolsFields + ' FROM `schools` WHERE `city_id` = ?';
     var sql = 'SELECT s.name, s.school_id FROM schools AS s JOIN schools_to_cities AS stc ON s.school_id = stc.school_id WHERE stc.city_id = ?';
     var prop = id;
-
     return query(sql, prop);
 };
 

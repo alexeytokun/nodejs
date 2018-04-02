@@ -23,6 +23,13 @@ var query = function (sql, props) {
 
 var dbCityObj = {};
 
+dbCityObj.getAllCities = function () {
+    var sql = 'SELECT ci.city_id, ci.name, co.name AS country FROM cities AS ci LEFT JOIN countries AS co ON co.country_id = ci.country_id';
+    var prop = '';
+
+    return query(sql, prop);
+};
+
 dbCityObj.getCities = function (id) {
     var sql = 'SELECT ' + citiesFields + ' FROM `cities` WHERE `country_id` = ?';
     var prop = id;

@@ -74,8 +74,8 @@ function clearForm() {
 
 function logOut() {
     var elem;
-    if (document.getElementById('userstable')) {
-        elem = document.getElementById('userstable');
+    if (document.getElementById('infotable')) {
+        elem = document.getElementById('infotable');
         elem.parentNode.removeChild(elem);
     }
     signIn.classList.toggle('show');
@@ -215,8 +215,21 @@ function editUser(id) {
             username.value = response.username;
             surname.value = response.surname;
             age.value = response.age;
-            modal.classList.add('show');
-            userForm.setAttribute('action', mainUrl + '/user/' + id);
+            getCountries()
+                .then(function (response) {
+                    country.innerHTML = '<option value="">Select Country</option>';
+                    response.forEach(function (element) {
+                        var opt = document.createElement('option');
+                        opt.setAttribute('value', String(element.country_id));
+                        opt.innerHTML = element.name;
+                        country.appendChild(opt);
+                    });
+                    modal.classList.add('show');
+                    userForm.setAttribute('action', mainUrl + '/user/' + id);
+                })
+                .catch(function (response) {
+                    showAlertModal(errorsObj[response.message]);
+                });
         }).catch(function (response) {
             showAlertModal(errorsObj[response.message]);
         });
@@ -258,11 +271,11 @@ function updateTable() {
 
 function createTable(usersObj) {
     var container = document.createElement('div');
-    if (document.getElementById('userstable')) {
-        var elem = document.getElementById('userstable');
+    if (document.getElementById('infotable')) {
+        var elem = document.getElementById('infotable');
         elem.parentNode.removeChild(elem);
     }
-    container.setAttribute('id', 'userstable');
+    container.setAttribute('id', 'infotable');
     var table = document.createElement('table');
     usersObj.forEach(function (element) {
         if (element !== null) {
@@ -392,7 +405,7 @@ saveButton.onclick = function () {
 
 
     saveUser(user).then(function () {
-        if (document.getElementById('userstable')) {
+        if (document.getElementById('infotable')) {
             updateTable()
                 .then(function (response) {
                     createTable(response);
@@ -422,7 +435,12 @@ signInButton.onclick = function () {
     signInUser(userData)
         .then(function (response) {
             signIn.classList.remove('show');
+            // if (response.role === 'admin') {
+            //     window.location.replace('admin.html');
+            //     return;
+            // }
             authHeader = response.authtoken;
+            sessionStorage.setItem('token', authHeader);
             return updateTable();
         })
         .then(function (response) {
@@ -436,7 +454,7 @@ signInButton.onclick = function () {
 };
 
 showAll.onclick = function () {
-    var container = document.getElementById('userstable');
+    var container = document.getElementById('infotable');
     if (container) {
         container.parentNode.removeChild(container);
     } else {
@@ -464,7 +482,7 @@ newUserButton.onclick = function () {
         })
         .catch(function (response) {
             showAlertModal(errorsObj[response.message]);
-        })
+        });
 };
 
 showSignIn.onclick = function () {
@@ -512,7 +530,7 @@ modalAlertCloseButton.onclick = function () {
 };
 
 country.onchange = function (event) {
-    if(+event.target.value === 0) {
+    if (+event.target.value === 0) {
         city.innerHTML = '<option value="0">Select City</option>';
         school.innerHTML = '<option value="0">Select School</option>';
         return;
@@ -534,7 +552,7 @@ country.onchange = function (event) {
 }
 
 city.onchange = function (event) {
-    if(+event.target.value === 0) {
+    if (+event.target.value === 0) {
         school.innerHTML = '<option value="0">Select School</option>';
         return;
     }
@@ -551,5 +569,5 @@ city.onchange = function (event) {
         })
         .catch(function (response) {
             showAlertModal(errorsObj[response.message]);
-        })
+        });
 }

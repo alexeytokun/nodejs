@@ -1,5 +1,5 @@
 var mainUrl = 'http://127.0.0.1:8000';
-var authHeader;
+var authHeader = sessionStorage.getItem('token');
 
 var wrapper = document.getElementById('wrapper');
 var saveButton = document.getElementById('save');
@@ -25,6 +25,10 @@ var country = document.getElementById('country');
 var city = document.getElementById('city');
 var school = document.getElementById('school');
 var bio = document.getElementById('bio');
+
+var showCountires = document.getElementById('showcountires');
+var showCities = document.getElementById('showcities');
+var showSchools = document.getElementById('showschools')
 
 var errorsObj = {
     SERVER_CON_ERROR: 'Server connection error',
@@ -60,8 +64,8 @@ function clearForm() {
 
 function logOut() {
     var elem;
-    if (document.getElementById('userstable')) {
-        elem = document.getElementById('userstable');
+    if (document.getElementById('infotable')) {
+        elem = document.getElementById('infotable');
         elem.parentNode.removeChild(elem);
     }
 }
@@ -176,11 +180,24 @@ function editUser(id) {
             username.value = response.username;
             surname.value = response.surname;
             age.value = response.age;
-            modal.classList.add('show');
-            userForm.setAttribute('action', mainUrl + '/user/' + id);
+            getCountries()
+                .then(function (response) {
+                    country.innerHTML = '<option value="">Select Country</option>';
+                    response.forEach(function (element) {
+                        var opt = document.createElement('option');
+                        opt.setAttribute('value', String(element.country_id));
+                        opt.innerHTML = element.name;
+                        country.appendChild(opt);
+                    });
+                    modal.classList.add('show');
+                    userForm.setAttribute('action', mainUrl + '/user/' + id);
+                })
+                .catch(function (response) {
+                    showAlertModal(errorsObj[response.message]);
+                });
         }).catch(function (response) {
-        showAlertModal(errorsObj[response.message]);
-    });
+            showAlertModal(errorsObj[response.message]);
+        });
 }
 
 function showUser(id) {
@@ -188,8 +205,8 @@ function showUser(id) {
         .then(function (response) {
             showUserInfo(response);
         }).catch(function (response) {
-        showAlertModal(errorsObj[response.message]);
-    });
+            showAlertModal(errorsObj[response.message]);
+        });
 }
 
 function updateTable() {
@@ -219,11 +236,11 @@ function updateTable() {
 
 function createTable(usersObj) {
     var container = document.createElement('div');
-    if (document.getElementById('userstable')) {
-        var elem = document.getElementById('userstable');
+    if (document.getElementById('infotable')) {
+        var elem = document.getElementById('infotable');
         elem.parentNode.removeChild(elem);
     }
-    container.setAttribute('id', 'userstable');
+    container.setAttribute('id', 'infotable');
     var table = document.createElement('table');
     usersObj.forEach(function (element) {
         if (element !== null) {
@@ -293,9 +310,14 @@ function getCountries() {
     });
 }
 
-function getCities(id) {
+function getCities(id) { // needs new route
     return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/city/' + id;
+        var url;
+        if (id) {
+            url = mainUrl + '/city/' + id;
+        } else {
+            url = mainUrl + '/city';
+        }
         var XHR = new XMLHttpRequest();
         XHR.open('GET', url);
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
@@ -319,7 +341,12 @@ function getCities(id) {
 
 function getSchools(id) {
     return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/school/' + id;
+        var url;
+        if (id) {
+            url = mainUrl + '/school/' + id;
+        } else {
+            url = mainUrl + '/school';
+        }
         var XHR = new XMLHttpRequest();
         XHR.open('GET', url);
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
@@ -341,6 +368,146 @@ function getSchools(id) {
     });
 }
 
+function createCountriesTable(countriesObj) {
+    var container = document.createElement('div');
+    if (document.getElementById('infotable')) {
+        var elem = document.getElementById('infotable');
+        elem.parentNode.removeChild(elem);
+    }
+    container.setAttribute('id', 'infotable');
+    var table = document.createElement('table');
+    countriesObj.forEach(function (element) {
+        if (element !== null) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>Name: ' + element.name + '</td>' +
+                '<td><button class="edit">Edit</button>' +
+                '<button class="del">Delete</button>';
+            tr.setAttribute('id', element.country_id);
+            table.appendChild(tr);
+        }
+    });
+    container.appendChild(table);
+
+    // container.onclick = function (event) {
+    //     var target = event.target;
+    //     var targetId = +target.parentNode.parentNode.getAttribute('id');
+    //
+    //     if (target.className === 'del') {
+    //         deleteUser(targetId)
+    //             .then(function () {
+    //                 // showAlertModal(response.message);
+    //                 return updateTable();
+    //             })
+    //             .then(function (response) {
+    //                 createTable(response);
+    //             })
+    //             .catch(function (response) {
+    //                 showAlertModal(errorsObj[response.message]);
+    //             });
+    //     }
+    //
+    //     if (target.className === 'edit') {
+    //         editUser(targetId);
+    //     }
+    // };
+
+    wrapper.insertBefore(container, showAll);
+}
+
+function createCitiesTable(citiesObj) {
+    var container = document.createElement('div');
+    if (document.getElementById('infotable')) {
+        var elem = document.getElementById('infotable');
+        elem.parentNode.removeChild(elem);
+    }
+    container.setAttribute('id', 'infotable');
+    var table = document.createElement('table');
+    citiesObj.forEach(function (element) {
+        if (element !== null) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>Name: ' + element.name + '</td>' +
+                '<td>Country: ' + element.country + '</td>' +
+                '<td><button class="edit">Edit</button>' +
+                '<button class="del">Delete</button>';
+            tr.setAttribute('id', element.city_id);
+            table.appendChild(tr);
+        }
+    });
+    container.appendChild(table);
+
+    // container.onclick = function (event) {
+    //     var target = event.target;
+    //     var targetId = +target.parentNode.parentNode.getAttribute('id');
+    //
+    //     if (target.className === 'del') {
+    //         deleteUser(targetId)
+    //             .then(function () {
+    //                 // showAlertModal(response.message);
+    //                 return updateTable();
+    //             })
+    //             .then(function (response) {
+    //                 createTable(response);
+    //             })
+    //             .catch(function (response) {
+    //                 showAlertModal(errorsObj[response.message]);
+    //             });
+    //     }
+    //
+    //     if (target.className === 'edit') {
+    //         editUser(targetId);
+    //     }
+    // };
+
+    wrapper.insertBefore(container, showAll);
+}
+
+function createSchoolsTable(schoolsObj) {
+    var container = document.createElement('div');
+    if (document.getElementById('infotable')) {
+        var elem = document.getElementById('infotable');
+        elem.parentNode.removeChild(elem);
+    }
+    container.setAttribute('id', 'infotable');
+    var table = document.createElement('table');
+    schoolsObj.forEach(function (element) {
+        if (element !== null) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>Name: ' + element.name + '</td>' +
+                '<td>City: ' + element.city + '</td>' +
+                '<td><button class="edit">Edit</button>' +
+                '<button class="del">Delete</button>';
+            tr.setAttribute('id', element.school_id);
+            table.appendChild(tr);
+        }
+    });
+    container.appendChild(table);
+
+    // container.onclick = function (event) {
+    //     var target = event.target;
+    //     var targetId = +target.parentNode.parentNode.getAttribute('id');
+    //
+    //     if (target.className === 'del') {
+    //         deleteUser(targetId)
+    //             .then(function () {
+    //                 // showAlertModal(response.message);
+    //                 return updateTable();
+    //             })
+    //             .then(function (response) {
+    //                 createTable(response);
+    //             })
+    //             .catch(function (response) {
+    //                 showAlertModal(errorsObj[response.message]);
+    //             });
+    //     }
+    //
+    //     if (target.className === 'edit') {
+    //         editUser(targetId);
+    //     }
+    // };
+
+    wrapper.insertBefore(container, showAll);
+}
+
 saveButton.onclick = function () {
     var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
         '&pass=' + pass.value + '&role=' + role.value + '&country=' + country.value + '&city=' + city.value +
@@ -353,7 +520,7 @@ saveButton.onclick = function () {
 
 
     saveUser(user).then(function () {
-        if (document.getElementById('userstable')) {
+        if (document.getElementById('infotable')) {
             updateTable()
                 .then(function (response) {
                     createTable(response);
@@ -373,7 +540,7 @@ saveButton.onclick = function () {
 };
 
 showAll.onclick = function () {
-    var container = document.getElementById('userstable');
+    var container = document.getElementById('infotable');
     if (container) {
         container.parentNode.removeChild(container);
     } else {
@@ -401,7 +568,7 @@ newUserButton.onclick = function () {
         })
         .catch(function (response) {
             showAlertModal(errorsObj[response.message]);
-        })
+        });
 };
 
 
@@ -428,7 +595,7 @@ modalAlertCloseButton.onclick = function () {
 };
 
 country.onchange = function (event) {
-    if(+event.target.value === 0) {
+    if (+event.target.value === 0) {
         city.innerHTML = '<option value="0">Select City</option>';
         school.innerHTML = '<option value="0">Select School</option>';
         return;
@@ -450,7 +617,7 @@ country.onchange = function (event) {
 }
 
 city.onchange = function (event) {
-    if(+event.target.value === 0) {
+    if (+event.target.value === 0) {
         school.innerHTML = '<option value="0">Select School</option>';
         return;
     }
@@ -467,5 +634,50 @@ city.onchange = function (event) {
         })
         .catch(function (response) {
             showAlertModal(errorsObj[response.message]);
-        })
+        });
+}
+
+showCountires.onclick = function () {
+    var container = document.getElementById('infotable');
+    if (container) {
+        container.parentNode.removeChild(container);
+    } else {
+        getCountries()
+            .then(function (response) {
+                createCountriesTable(response);
+            })
+            .catch(function (response) {
+                showAlertModal(errorsObj[response.message]);
+            });
+    }
+}
+
+showCities.onclick = function () {
+    var container = document.getElementById('infotable');
+    if (container) {
+        container.parentNode.removeChild(container);
+    } else {
+        getCities()
+            .then(function (response) {
+                createCitiesTable(response);
+            })
+            .catch(function (response) {
+                showAlertModal(errorsObj[response.message]);
+            });
+    }
+}
+
+showSchools.onclick = function () {
+    var container = document.getElementById('infotable');
+    if (container) {
+        container.parentNode.removeChild(container);
+    } else {
+        getSchools()
+            .then(function (response) {
+                createSchoolsTable(response);
+            })
+            .catch(function (response) {
+                showAlertModal(errorsObj[response.message]);
+            });
+    }
 }
