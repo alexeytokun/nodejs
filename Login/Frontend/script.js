@@ -31,6 +31,11 @@ var modalAlert = document.getElementById('modalWindow');
 var modalAlertCloseButton = document.getElementById('closeWindow');
 var alertText = document.getElementById('alert');
 
+var country = document.getElementById('country');
+var city = document.getElementById('city');
+var school = document.getElementById('school');
+var bio = document.getElementById('school');
+
 var errorsObj = {
     SERVER_CON_ERROR: 'Server connection error',
     ACCESS_DENIED_ERROR: 'Access Denied',
@@ -303,6 +308,32 @@ function createTable(usersObj) {
     wrapper.insertBefore(container, showAll);
 }
 
+function getCountries() {
+    return new Promise(function (resolve, reject) {
+        var url = mainUrl + '/country';
+        var XHR = new XMLHttpRequest();
+        XHR.open('GET', url);
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
+        XHR.send();
+        clearForm();
+        XHR.onload = function () {
+            var response = JSON.parse(XHR.response);
+            if (this.status === 200) {
+                console.log(response);
+                resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
+            } else {
+                reject(response);
+            }
+        };
+        XHR.onerror = function () {
+            reject({ message: 'SERVER_CON_ERROR' });
+        };
+    });
+}
+
 saveButton.onclick = function () {
     var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
     '&pass=' + pass.value + '&role=' + role.value;
@@ -373,7 +404,19 @@ showAll.onclick = function () {
 };
 
 newUserButton.onclick = function () {
-    modal.classList.add('show');
+    getCountries()
+        .then(function (response) {
+            response.forEach(function (element) {
+                var opt = document.createElement('option');
+                opt.setAttribute('value', String(element.country_id));
+                opt.innerHTML = element.name;
+                country.appendChild(opt);
+            });
+            modal.classList.add('show');
+        })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        })
 };
 
 showSignIn.onclick = function () {

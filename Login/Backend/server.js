@@ -6,6 +6,7 @@ var auth = require('./modules/routes/auth');
 var user = require('./modules/routes/user');
 var users = require('./modules/routes/users');
 var signin = require('./modules/routes/signin');
+var country = require('./modules/routes/country');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -16,6 +17,8 @@ app.use('/', auth);
 app.use('/signin', signin);
 app.use('/user', user);
 app.use('/users', users);
+app.use('/country', country);
+
 
 app.listen(port, function (error) {
     if (error) {
