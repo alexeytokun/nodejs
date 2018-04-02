@@ -360,6 +360,32 @@ function getCities(id) {
     });
 }
 
+function getSchools(id) {
+    return new Promise(function (resolve, reject) {
+        var url = mainUrl + '/school/' + id;
+        var XHR = new XMLHttpRequest();
+        XHR.open('GET', url);
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
+        XHR.send();
+        clearForm();
+        XHR.onload = function () {
+            var response = JSON.parse(XHR.response);
+            if (this.status === 200) {
+                console.log(response);
+                resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
+            } else {
+                reject(response);
+            }
+        };
+        XHR.onerror = function () {
+            reject({ message: 'SERVER_CON_ERROR' });
+        };
+    });
+}
+
 saveButton.onclick = function () {
     var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
     '&pass=' + pass.value + '&role=' + role.value;
@@ -432,6 +458,7 @@ showAll.onclick = function () {
 newUserButton.onclick = function () {
     getCountries()
         .then(function (response) {
+            country.innerHTML = '<option value="">Select Country</option>';
             response.forEach(function (element) {
                 var opt = document.createElement('option');
                 opt.setAttribute('value', String(element.country_id));
@@ -489,15 +516,41 @@ modalAlertCloseButton.onclick = function () {
     modalAlert.classList.remove('show');
 };
 
-country.onchange = function () {
+country.onchange = function (event) {
+    if(+event.target.value === 0) {
+        city.innerHTML = '<option value="0">Select City</option>';
+        school.innerHTML = '<option value="0">Select School</option>';
+        return;
+    }
     getCities(country.value)
         .then(function (response) {
-            city.innerHTML = '';
+            city.innerHTML = '<option value="0">Select City</option>';
             response.forEach(function (element) {
                 var opt = document.createElement('option');
                 opt.setAttribute('value', String(element.city_id));
                 opt.innerHTML = element.name;
                 city.appendChild(opt);
+            });
+            school.innerHTML = '<option value="0">Select School</option>';
+        })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        })
+}
+
+city.onchange = function (event) {
+    if(+event.target.value === 0) {
+        school.innerHTML = '<option value="0">Select School</option>';
+        return;
+    }
+    getSchools(city.value)
+        .then(function (response) {
+            school.innerHTML = '<option value="0">Select School</option>';
+            response.forEach(function (element) {
+                var opt = document.createElement('option');
+                opt.setAttribute('value', String(element.school_id));
+                opt.innerHTML = element.name;
+                school.appendChild(opt);
             });
         })
         .catch(function (response) {

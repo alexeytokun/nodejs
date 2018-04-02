@@ -8,6 +8,7 @@ var users = require('./modules/routes/users');
 var signin = require('./modules/routes/signin');
 var country = require('./modules/routes/country');
 var city = require('./modules/routes/city');
+var school = require('./modules/routes/school');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -20,6 +21,7 @@ app.use('/user', user);
 app.use('/users', users);
 app.use('/country', country);
 app.use('/city', city);
+app.use('/school', school);
 
 
 app.listen(port, function (error) {
