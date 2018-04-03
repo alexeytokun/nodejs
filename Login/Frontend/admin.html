@@ -59,9 +59,9 @@
     <div id="school_myModal" class="modal">
         <form action="http://127.0.0.1:8000/school" method="post" id="school_form" autocomplete="off" class='modal-content'>
             <span id="school_close" class="close">&times;</span>
-            <input id="school_schoolname" name="schoolname" type="text" placeholder="School name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
-            <input id="school_countryname" name="countryname" type="text" placeholder="Country name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
-            <input id="school_cityname" name="cityname" type="text" placeholder="City name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="school_schoolname" name="schoolname" type="text" placeholder="School name" pattern="[ 0-9а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <select id="school_countryname" name="countryname"></select>
+            <select id="school_cityname" name="cityname"></select>
             <input id="school_save" type="button" value="Save">
         </form>
     </div>

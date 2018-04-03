@@ -347,7 +347,7 @@ function getCountries() {
 
 function getCities(id) {
     return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/city/' + id;
+        var url = mainUrl + '/city/country/' + id;
         var XHR = new XMLHttpRequest();
         XHR.open('GET', url);
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
@@ -371,7 +371,7 @@ function getCities(id) {
 
 function getSchools(id) {
     return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/school/' + id;
+        var url = mainUrl + '/school/city/' + id;
         var XHR = new XMLHttpRequest();
         XHR.open('GET', url);
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
