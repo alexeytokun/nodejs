@@ -47,6 +47,24 @@
         </form>
     </div>
 
+    <div id="city_myModal" class="modal">
+        <form action="http://127.0.0.1:8000/city" method="post" id="city_form" autocomplete="off" class='modal-content'>
+            <span id="city_close" class="close">&times;</span>
+            <input id="city_cityname" name="cityname" type="text" placeholder="City name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <select id="city_countryname" name="countryname"></select>
+            <input id="city_save" type="button" value="Save">
+        </form>
+    </div>
+
+    <div id="school_myModal" class="modal">
+        <form action="http://127.0.0.1:8000/school" method="post" id="school_form" autocomplete="off" class='modal-content'>
+            <span id="school_close" class="close">&times;</span>
+            <input id="school_schoolname" name="schoolname" type="text" placeholder="School name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="school_countryname" name="countryname" type="text" placeholder="Country name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="school_cityname" name="cityname" type="text" placeholder="City name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="school_save" type="button" value="Save">
+        </form>
+    </div>
 
     <button class='btn' id="showall">Show all users</button>
     <button class='btn' id="createuser">Create new user</button>

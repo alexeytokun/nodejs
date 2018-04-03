@@ -2,9 +2,6 @@ var errorsObj = require('../config/errors');
 var citiesFields = '`city_id`, `name`, `country_id`';
 var pool = require('../config/connection').pool;
 
-function validate(data) {
-    return true;
-}
 
 var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
@@ -48,16 +45,16 @@ dbCityObj.getCity = function (id) {
     return query(sql, prop);
 };
 
-dbCityObj.addCity = function (name) {
-    var sql = 'INSERT INTO `cities` (`name`) VALUES (?)';
-    var prop = name;
+dbCityObj.addCity = function (name, countryId) {
+    var sql = 'INSERT INTO `cities` (`name`, `country_id`) VALUES (?,?)';
+    var prop = [name, countryId];
 
     return query(sql, prop);
 };
 
 dbCityObj.updateCity = function (id, data) {
-    var sql = 'UPDATE `cities` SET `name`=? WHERE `city_id`=?';
-    var prop = [data.name, id];
+    var sql = 'UPDATE `cities` SET `name`=?, `country_id`=? WHERE `city_id`=?';
+    var prop = [data.cityname, data.countryname, id];
 
     return query(sql, prop)
         .then(function (result) {
