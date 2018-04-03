@@ -215,21 +215,7 @@ function editUser(id) {
             username.value = response.username;
             surname.value = response.surname;
             age.value = response.age;
-            getCountries()
-                .then(function (response) {
-                    country.innerHTML = '<option value="">Select Country</option>';
-                    response.forEach(function (element) {
-                        var opt = document.createElement('option');
-                        opt.setAttribute('value', String(element.country_id));
-                        opt.innerHTML = element.name;
-                        country.appendChild(opt);
-                    });
-                    modal.classList.add('show');
-                    userForm.setAttribute('action', mainUrl + '/user/' + id);
-                })
-                .catch(function (response) {
-                    showAlertModal(errorsObj[response.message]);
-                });
+            showCountriesSelect();
         }).catch(function (response) {
             showAlertModal(errorsObj[response.message]);
         });
@@ -393,6 +379,23 @@ function getSchools(id) {
     });
 }
 
+function showCountriesSelect() {
+    return getCountries()
+        .then(function (response) {
+            country.innerHTML = '<option value="">Select Country</option>';
+            response.forEach(function (element) {
+                var opt = document.createElement('option');
+                opt.setAttribute('value', String(element.country_id));
+                opt.innerHTML = element.name;
+                country.appendChild(opt);
+            });
+            modal.classList.add('show');
+        })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        });
+}
+
 saveButton.onclick = function () {
     var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
     '&pass=' + pass.value + '&role=' + role.value + '&country=' + country.value + '&city=' + city.value +
@@ -469,20 +472,7 @@ showAll.onclick = function () {
 };
 
 newUserButton.onclick = function () {
-    getCountries()
-        .then(function (response) {
-            country.innerHTML = '<option value="">Select Country</option>';
-            response.forEach(function (element) {
-                var opt = document.createElement('option');
-                opt.setAttribute('value', String(element.country_id));
-                opt.innerHTML = element.name;
-                country.appendChild(opt);
-            });
-            modal.classList.add('show');
-        })
-        .catch(function (response) {
-            showAlertModal(errorsObj[response.message]);
-        });
+    showCountriesSelect();
 };
 
 showSignIn.onclick = function () {
@@ -516,6 +506,7 @@ window.onclick = function (event) {
 };
 
 signInSwitch.onclick = function () {
+    showCountriesSelect();
     modal.classList.toggle('show');
     signIn.classList.toggle('show');
 };

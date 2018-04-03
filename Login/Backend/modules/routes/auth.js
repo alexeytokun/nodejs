@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var dbObj = require('../db/users');
+var errorsObj = require('../config/errors');
 
 router.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -48,6 +49,9 @@ router.use(function (req, res, next) {
                 return next();
             })
             .catch(function (result) {
+                if (!result) {
+                    result = { status: 401, message: errorsObj.TOKEN_TIME_ERROR };
+                }
                 body.token = 'anon';
                 return res.status(result.status).json({ message: result.message });
             });
