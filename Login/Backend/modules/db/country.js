@@ -38,4 +38,27 @@ dbCountryObj.getCountry = function (id) {
     return query(sql, prop);
 };
 
+dbCountryObj.addCountry = function (name) {
+    var sql = 'INSERT INTO `countries` (`name`) VALUES (?)';
+    var prop = name;
+
+    return query(sql, prop);
+};
+
+dbCountryObj.updateCountry = function (id, data) {
+    var sql = 'UPDATE `countries` SET `name`=? WHERE `country_id`=?';
+    var prop = [data.name, id];
+
+    return query(sql, prop)
+        .then(function (result) {
+            if (result.affectedRows !== 0) {
+                return ({ status: 200, message: 'Country data updated' });
+            }
+            return ({ status: 400, message: errorsObj.WRONG_ID });
+        })
+        .catch(function (result) {
+            throw ({ status: result.status, message: result.message });
+        });
+};
+
 module.exports = dbCountryObj;

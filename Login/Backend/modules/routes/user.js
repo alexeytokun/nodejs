@@ -14,7 +14,8 @@ router.post('/', function (req, res, next) {
         });
 }, function (req, res, next) {
     if (validate(req.body)) {
-        dbObj.addUserToDb(req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role,
+        dbObj.addUserToDb(
+            req.body.username, req.body.surname, req.body.age, req.body.pass, req.body.role,
             req.body.country, req.body.city, req.body.school, req.body.bio)
             .then(function (result) {
                 return res.json({ message: result.insertId });

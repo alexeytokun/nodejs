@@ -400,7 +400,7 @@ function getSchools(id) {
 
 function addCountry(countryData) {
     return new Promise(function (resolve, reject) {
-        var url = userForm.getAttribute('action');
+        var url = countryForm.getAttribute('action');
         var XHR = new XMLHttpRequest();
         XHR.open('POST', url);
         XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -428,6 +428,7 @@ function editCountry(id) {
         .then(function (response) {
             console.log(response);
             countryName.value = response.name;
+            countryForm.setAttribute('action', mainUrl + '/country/' + id);
             countryModal.classList.add('show');
         })
         .catch(function (response) {
@@ -764,4 +765,32 @@ showSchools.onclick = function () {
 
 countryFormClose.onclick = function () {
     countryModal.classList.remove('show');
+    countryForm.setAttribute('action', mainUrl + '/country');
+}
+
+countrySave.onclick = function () {
+    var countryData = 'name=' + countryName.value;
+
+    // if (!validate()) {
+    //     showAlertModal(errorsObj.VALIDATION_ERROR);
+    //     return;
+    // }
+    addCountry(countryData).then(function () {
+        if (document.getElementById('infotable')) {
+            getCountries()
+                .then(function (response) {
+                    createCountriesTable(response);
+                })
+                .catch(function (response) {
+                    showAlertModal(errorsObj[response.message]);
+                });
+        }
+        countryName.value = '';
+    })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        });
+
+    countryModal.classList.remove('show');
+    countryForm.setAttribute('action', mainUrl + '/country');
 }

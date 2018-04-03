@@ -3,6 +3,10 @@ var router = express.Router();
 var dbInfoObj = require('../db/country');
 var errorsObj = require('../config/errors');
 
+function validate(data) {
+    return true;
+}
+
 router.get('/', function (req, res, next) {
     dbInfoObj.getCountries()
         .then(function (result) {
@@ -26,6 +30,35 @@ router.get('/:id', function (req, res, next) {
             } else {
                 res.status(400).json({ message: errorsObj.WRONG_ID });
             }
+        })
+        .catch(function (result) {
+            res.status(result.status).json({ message: result.message });
+        });
+});
+
+router.post('/', function (req, res, next) { //add isUnique check
+    if (validate(req.body)) {
+        dbInfoObj.addCountry(req.body.name)
+            .then(function (result) {
+                return res.json({ message: result.insertId });
+            })
+            .catch(function (result) {
+                return res.status(result.status).json({ message: result.message });
+            });
+    } else next();
+}, function (req, res) {
+    res.status(406).json({ message: errorsObj.VALIDATION });
+});
+
+router.post('/:id', function (req, res, next) { //add isUnique check
+    if (!validate(req.body)) {
+        return res.status(406).json({ message: errorsObj.VALIDATION });
+    }
+    return next();
+}, function (req, res, next) {
+    dbInfoObj.updateCountry(req.params.id, req.body)
+        .then(function (result) {
+            return res.status(result.status).json({ message: result.message });
         })
         .catch(function (result) {
             res.status(result.status).json({ message: result.message });
