@@ -18,7 +18,7 @@ router.get('/', function (req, res, next) {
         });
 });
 
-router.get('/:id', function (req, res, next) {
+router.get('/city/:id', function (req, res, next) {
     var id = req.params.id;
     dbSchoolObj.getSchools(id)
         .then(function (result) {

@@ -61,4 +61,21 @@ dbCountryObj.updateCountry = function (id, data) {
         });
 };
 
+dbCountryObj.deleteCountry = function (id) {
+    var sql = 'DELETE FROM `countries` WHERE `country_id` = ?';
+    var prop = id;
+
+    return query(sql, prop)
+        .then(function (result) {
+            if (result.affectedRows !== 0) {
+                return ({ status: 200, message: 'Country deleted', id: id });
+            }
+            return ({ status: 400, message: errorsObj.WRONG_ID });
+        })
+        .catch(function (result) {
+            console.log('rej' + result);
+            throw ({ status: result.status, message: result.message });
+        });
+};
+
 module.exports = dbCountryObj;

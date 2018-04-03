@@ -2,6 +2,10 @@ var errorsObj = require('../config/errors');
 var schoolsFields = '`school_id`, `name`';
 var pool = require('../config/connection').pool;
 
+function validate(data) {
+    return true;
+}
+
 var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
         pool.getConnection(function (err, connection) {

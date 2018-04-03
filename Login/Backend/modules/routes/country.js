@@ -65,4 +65,14 @@ router.post('/:id', function (req, res, next) { //add isUnique check
         });
 });
 
+router.delete('/:id', function (req, res, next) {
+    dbInfoObj.deleteCountry(req.params.id)
+        .then(function (result) {
+            return res.status(result.status).json({ message: result.message });
+        })
+        .catch(function (result) {
+            res.status(result.status).json({ message: result.message });
+        });
+});
+
 module.exports = router;

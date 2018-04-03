@@ -344,7 +344,7 @@ function getCities(id) { // needs new route
     return new Promise(function (resolve, reject) {
         var url;
         if (id) {
-            url = mainUrl + '/city/' + id;
+            url = mainUrl + '/city/country/' + id;
         } else {
             url = mainUrl + '/city';
         }
@@ -373,7 +373,7 @@ function getSchools(id) {
     return new Promise(function (resolve, reject) {
         var url;
         if (id) {
-            url = mainUrl + '/school/' + id;
+            url = mainUrl + '/school/city/' + id;
         } else {
             url = mainUrl + '/school';
         }
@@ -436,6 +436,31 @@ function editCountry(id) {
         });
 }
 
+function deleteCountry(id) {
+    return new Promise(function (resolve, reject) {
+        var url = mainUrl + '/country/' + id;
+        var XHR = new XMLHttpRequest();
+        XHR.open('DELETE', url);
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
+        XHR.send();
+
+        XHR.onload = function () {
+            var response = JSON.parse(XHR.response);
+            if (this.status === 200) {
+                resolve(response.message);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
+            } else {
+                reject(response);
+            }
+        };
+        XHR.onerror = function () {
+            reject({ message: 'SERVER_CON_ERROR' });
+        };
+    });
+}
+
 function createCountriesTable(countriesObj) {
     var container = document.createElement('div');
     if (document.getElementById('infotable')) {
@@ -463,19 +488,18 @@ function createCountriesTable(countriesObj) {
         var target = event.target;
         var targetId = +target.parentNode.parentNode.getAttribute('id');
 
-        // if (target.className === 'del') {
-        //     deleteCountry(targetId)
-        //         .then(function () {
-        //             // showAlertModal(response.message);
-        //             return getCountries();
-        //         })
-        //         .then(function (response) {
-        //             createCountriesTable(response);
-        //         })
-        //         .catch(function (response) {
-        //             showAlertModal(errorsObj[response.message]);
-        //         });
-        // }
+        if (target.className === 'del') {
+            deleteCountry(targetId)
+                .then(function () {
+                    return getCountries();
+                })
+                .then(function (response) {
+                    createCountriesTable(response);
+                })
+                .catch(function (response) {
+                    showAlertModal(errorsObj[response.message]);
+                });
+        }
 
         if (target.className === 'new') {
             countryModal.classList.add('show');
