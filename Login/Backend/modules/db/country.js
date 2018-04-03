@@ -30,4 +30,12 @@ dbCountryObj.getCountries = function () {
     return query(sql, prop);
 };
 
+
+dbCountryObj.getCountry = function (id) {
+    var sql = 'SELECT `name` FROM `countries` WHERE `country_id` = ?';
+    var prop = id;
+
+    return query(sql, prop);
+};
+
 module.exports = dbCountryObj;

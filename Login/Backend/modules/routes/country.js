@@ -17,4 +17,19 @@ router.get('/', function (req, res, next) {
         });
 });
 
+router.get('/:id', function (req, res, next) {
+    var id = req.params.id;
+    dbInfoObj.getCountry(id)
+        .then(function (result) {
+            if (result.length) {
+                res.json(result[0]);
+            } else {
+                res.status(400).json({ message: errorsObj.WRONG_ID });
+            }
+        })
+        .catch(function (result) {
+            res.status(result.status).json({ message: result.message });
+        });
+});
+
 module.exports = router;

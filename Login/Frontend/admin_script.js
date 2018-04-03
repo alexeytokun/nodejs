@@ -28,7 +28,13 @@ var bio = document.getElementById('bio');
 
 var showCountires = document.getElementById('showcountires');
 var showCities = document.getElementById('showcities');
-var showSchools = document.getElementById('showschools')
+var showSchools = document.getElementById('showschools');
+
+var countryModal = document.getElementById('country_myModal');
+var countryForm = document.getElementById('country_form');
+var countryName = document.getElementById('country_countryname');
+var countrySave = document.getElementById('country_save');
+var countryFormClose = document.getElementById('country_close');
 
 var errorsObj = {
     SERVER_CON_ERROR: 'Server connection error',
@@ -182,7 +188,7 @@ function editUser(id) {
             age.value = response.age;
             getCountries()
                 .then(function (response) {
-                    country.innerHTML = '<option value="">Select Country</option>';
+                    country.innerHTML = '<option value="0">Select Country</option>';
                     response.forEach(function (element) {
                         var opt = document.createElement('option');
                         opt.setAttribute('value', String(element.country_id));
@@ -310,6 +316,30 @@ function getCountries() {
     });
 }
 
+function getCountry(id) {
+    return new Promise(function (resolve, reject) {
+        var url = mainUrl + '/country/' + id;
+        var XHR = new XMLHttpRequest();
+        XHR.open('GET', url);
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
+        XHR.send();
+        XHR.onload = function () {
+            var response = JSON.parse(XHR.response);
+            if (this.status === 200) {
+                resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
+            } else {
+                reject(response);
+            }
+        };
+        XHR.onerror = function () {
+            reject({ message: 'SERVER_CON_ERROR' });
+        };
+    });
+}
+
 function getCities(id) { // needs new route
     return new Promise(function (resolve, reject) {
         var url;
@@ -368,6 +398,43 @@ function getSchools(id) {
     });
 }
 
+function addCountry(countryData) {
+    return new Promise(function (resolve, reject) {
+        var url = userForm.getAttribute('action');
+        var XHR = new XMLHttpRequest();
+        XHR.open('POST', url);
+        XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
+        XHR.send(countryData);
+        XHR.onload = function () {
+            var response = JSON.parse(XHR.response);
+            if (this.status === 200) {
+                resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
+            } else {
+                reject(response);
+            }
+        };
+        XHR.onerror = function () {
+            reject({ message: 'SERVER_CON_ERROR' });
+        };
+    });
+}
+
+function editCountry(id) {
+    getCountry(id)
+        .then(function (response) {
+            console.log(response);
+            countryName.value = response.name;
+            countryModal.classList.add('show');
+        })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        });
+}
+
 function createCountriesTable(countriesObj) {
     var container = document.createElement('div');
     if (document.getElementById('infotable')) {
@@ -386,30 +453,37 @@ function createCountriesTable(countriesObj) {
             table.appendChild(tr);
         }
     });
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><button class="new">Add new</button>';
+    table.appendChild(tr);
     container.appendChild(table);
 
-    // container.onclick = function (event) {
-    //     var target = event.target;
-    //     var targetId = +target.parentNode.parentNode.getAttribute('id');
-    //
-    //     if (target.className === 'del') {
-    //         deleteUser(targetId)
-    //             .then(function () {
-    //                 // showAlertModal(response.message);
-    //                 return updateTable();
-    //             })
-    //             .then(function (response) {
-    //                 createTable(response);
-    //             })
-    //             .catch(function (response) {
-    //                 showAlertModal(errorsObj[response.message]);
-    //             });
-    //     }
-    //
-    //     if (target.className === 'edit') {
-    //         editUser(targetId);
-    //     }
-    // };
+    container.onclick = function (event) {
+        var target = event.target;
+        var targetId = +target.parentNode.parentNode.getAttribute('id');
+
+        // if (target.className === 'del') {
+        //     deleteCountry(targetId)
+        //         .then(function () {
+        //             // showAlertModal(response.message);
+        //             return getCountries();
+        //         })
+        //         .then(function (response) {
+        //             createCountriesTable(response);
+        //         })
+        //         .catch(function (response) {
+        //             showAlertModal(errorsObj[response.message]);
+        //         });
+        // }
+
+        if (target.className === 'new') {
+            countryModal.classList.add('show');
+        }
+
+        if (target.className === 'edit') {
+            editCountry(targetId);
+        }
+    };
 
     wrapper.insertBefore(container, showAll);
 }
@@ -433,6 +507,9 @@ function createCitiesTable(citiesObj) {
             table.appendChild(tr);
         }
     });
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><button class="new">Add new</button>';
+    table.appendChild(tr);
     container.appendChild(table);
 
     // container.onclick = function (event) {
@@ -480,6 +557,9 @@ function createSchoolsTable(schoolsObj) {
             table.appendChild(tr);
         }
     });
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><button class="new">Add new</button>';
+    table.appendChild(tr);
     container.appendChild(table);
 
     // container.onclick = function (event) {
@@ -557,7 +637,7 @@ showAll.onclick = function () {
 newUserButton.onclick = function () {
     getCountries()
         .then(function (response) {
-            country.innerHTML = '<option value="">Select Country</option>';
+            country.innerHTML = '<option value="0">Select Country</option>';
             response.forEach(function (element) {
                 var opt = document.createElement('option');
                 opt.setAttribute('value', String(element.country_id));
@@ -680,4 +760,8 @@ showSchools.onclick = function () {
                 showAlertModal(errorsObj[response.message]);
             });
     }
+}
+
+countryFormClose.onclick = function () {
+    countryModal.classList.remove('show');
 }

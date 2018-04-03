@@ -80,6 +80,7 @@ td {
 
 td button {
     width: 33%;
+    min-width: 70px;
 }
 
 input {
@@ -115,6 +116,13 @@ input[type='button'] {
     outline-offset: 0;
 }
 
+.btn-small {
+    width: 34%;
+}
+
+.btn-wrapper {
+    display: flex;
+}
 
   
 

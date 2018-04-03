@@ -39,11 +39,22 @@
         </form>
     </div>
 
+    <div id="country_myModal" class="modal">
+        <form action="http://127.0.0.1:8000/country" method="post" id="country_form" autocomplete="off" class='modal-content'>
+            <span id="country_close" class="close">&times;</span>
+            <input id="country_countryname" name="countryname" type="text" placeholder="Name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
+            <input id="country_save" type="button" value="Save">
+        </form>
+    </div>
+
+
     <button class='btn' id="showall">Show all users</button>
-    <button class="btn" id="showcountires">Show all countries</button>
-    <button class="btn" id="showcities">Show all cities</button>
-    <button class="btn" id="showschools">Show all schools</button>
     <button class='btn' id="createuser">Create new user</button>
+    <div class='btn-wrapper'>
+        <button class="btn btn-small" id="showcountires">Show all countries</button>
+        <button class="btn btn-small" id="showcities">Show all cities</button>
+        <button class="btn btn-small" id="showschools">Show all schools</button>
+    </div>
     <button class='btn'><a href="index.html">Log out</a></button>
 </div>
 <script src="admin_script.js"></script>
