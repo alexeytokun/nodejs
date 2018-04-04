@@ -29,4 +29,16 @@ router.post('/', function (req, res, next) {
         });
 });
 
+router.get('/role', function (req, res, next) {
+    dbObj.getRole(req.headers['user-auth-token'])
+        .then(function (result) {
+            return res.json({
+                role: result[0].role
+            });
+        })
+        .catch(function (result) {
+            res.status(result.status).json({ message: result.message });
+        });
+});
+
 module.exports = router;

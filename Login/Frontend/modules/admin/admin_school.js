@@ -242,18 +242,14 @@ function createSchoolsTable(schoolsObj) {
 }
 
 showSchools.onclick = function () {
-    var container = document.getElementById('infotable');
-    if (container) {
-        container.parentNode.removeChild(container);
-    } else {
-        getSchools()
-            .then(function (response) {
-                createSchoolsTable(response);
-            })
-            .catch(function (response) {
-                showAlertModal(errorsObj[response.message]);
-            });
-    }
+    removeTable();
+    getSchools()
+        .then(function (response) {
+            createSchoolsTable(response);
+        })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        });
 }
 
 schoolFormClose.onclick = function () {

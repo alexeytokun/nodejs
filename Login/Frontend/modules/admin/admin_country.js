@@ -192,18 +192,14 @@ country.onchange = function (event) {
 }
 
 showCountires.onclick = function () {
-    var container = document.getElementById('infotable');
-    if (container) {
-        container.parentNode.removeChild(container);
-    } else {
-        getCountries()
-            .then(function (response) {
-                createCountriesTable(response);
-            })
-            .catch(function (response) {
-                showAlertModal(errorsObj[response.message]);
-            });
-    }
+    removeTable();
+    getCountries()
+        .then(function (response) {
+            createCountriesTable(response);
+        })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        });
 }
 
 countryFormClose.onclick = function () {

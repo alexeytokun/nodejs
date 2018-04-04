@@ -103,7 +103,7 @@ dbObj.isUnique = function (username, id) {
 };
 
 dbObj.setToken = function (results) {
-    var timestamp = countTimestamp(20);
+    var timestamp = countTimestamp(60);
     var uuid = uuidv4();
     var sqlUpdate = 'UPDATE `tokens` SET `uuid`=?, `timestamp`=? WHERE id=?';
     var sqlInsert = 'INSERT INTO `tokens` (`uuid`, `timestamp`, `id`) VALUES (?, ?, ?)';
@@ -154,6 +154,12 @@ dbObj.deleteToken = function (id) {
 dbObj.deleteUnusedToken = function (id) {
     var sql = 'DELETE FROM `tokens` WHERE `id` = ?';
     var prop = id;
+    return query(sql, prop);
+};
+
+dbObj.getRole = function (uuid) {
+    var sql = 'SELECT `role` FROM `users` AS u JOIN `tokens` AS t WHERE t.uuid = ? AND u.id = t.id';
+    var prop = uuid;
     return query(sql, prop);
 };
 

@@ -7,6 +7,13 @@ function validate(data) {
     return true;
 }
 
+function isAdmin(req, res, next) {
+    if (req.body.token !== 'admin') {
+        return res.status(403).json({ message: errorsObj.ACCESS_DENIED });
+    }
+    return next();
+}
+
 router.get('/', function (req, res, next) {
     dbSchoolObj.getAllSchools()
         .then(function (result) {
@@ -36,7 +43,7 @@ router.get('/city/:id', function (req, res, next) {
         });
 });
 
-router.get('/:id', function (req, res, next) {
+router.get('/:id', isAdmin, function (req, res, next) {
     var id = req.params.id;
     dbSchoolObj.getSchool(id)
         .then(function (result) {
@@ -51,7 +58,7 @@ router.get('/:id', function (req, res, next) {
         });
 });
 
-router.post('/', function (req, res, next) { //add isUnique check
+router.post('/', isAdmin, function (req, res, next) { //add isUnique check
     if (validate(req.body)) {
         dbSchoolObj.addSchool(req.body.schoolname, req.body.cityname)
             .then(function (result) {
@@ -65,7 +72,7 @@ router.post('/', function (req, res, next) { //add isUnique check
     res.status(406).json({ message: errorsObj.VALIDATION });
 });
 
-router.post('/:id', function (req, res, next) { //add isUnique check
+router.post('/:id', isAdmin, function (req, res, next) { //add isUnique check
     if (!validate(req.body)) {
         return res.status(406).json({ message: errorsObj.VALIDATION });
     }
@@ -80,7 +87,7 @@ router.post('/:id', function (req, res, next) { //add isUnique check
         });
 });
 
-router.delete('/:id', function (req, res, next) {
+router.delete('/:id', isAdmin, function (req, res, next) {
     dbSchoolObj.deleteSchool(req.params.id)
         .then(function (result) {
             return res.status(result.status).json({ message: result.message });

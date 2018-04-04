@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<a id ='beadmin' href="admin.html">Go to admin page</a>
+<button id ='to_admin' class="btn">Go to admin page</button>
 <div id="signin" class="modal">
     <form action="http://127.0.0.1:8000/signin" method="post" id="si_form" autocomplete="off" class='modal-content'>
         <span class="close">&times;</span>
@@ -30,7 +30,7 @@
     <img src="img/BWLogo.png">
     <div id="myModal" class="modal">
         <form action="http://127.0.0.1:8000/user" method="post" id="userform" autocomplete="off" class='modal-content'>
-            <span class="close">&times;</span>
+            <span class="close" id="modal_close">&times;</span>
             <input id="username" name="username" type="text" placeholder="Name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
             <input id="surname" name="surname" type="text" placeholder="Surname" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
             <input id="age" name="age" type="text" placeholder="Age" pattern="[0-9]{1,2}" required>

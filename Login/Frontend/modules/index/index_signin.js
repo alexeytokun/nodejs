@@ -46,6 +46,43 @@ function signInUser(user) {
     });
 }
 
+function getRole() {
+    return new Promise(function (resolve, reject) {
+        var url = mainUrl + '/signin/role';
+        var XHR = new XMLHttpRequest();
+        XHR.open('GET', url);
+        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
+        XHR.send();
+        XHR.onload = function () {
+            var response = JSON.parse(XHR.response);
+            if (this.status === 200) {
+                resolve(response);
+            } else if (this.status === 401) {
+                logOut();
+                reject(response);
+            } else {
+                reject(response);
+            }
+        };
+        XHR.onerror = function () {
+            reject({ message: 'SERVER_CON_ERROR' });
+        };
+    });
+}
+
+adminBtn.onclick = function () {
+    getRole()
+        .then(function (response) {
+            if (response.role === 'admin') {
+                window.location.replace('admin.html');
+            } else {
+                throw { message: 'ACCESS_DENIED_ERROR' };
+            }
+        }).catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        });
+}
+
 signInButton.onclick = function () {
     var userData = 'username=' + siUsername.value + '&pass=' + siPassword.value;
     if (!validateSignIn()) {

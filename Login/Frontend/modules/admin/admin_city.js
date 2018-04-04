@@ -223,18 +223,14 @@ city.onchange = function (event) {
 }
 
 showCities.onclick = function () {
-    var container = document.getElementById('infotable');
-    if (container) {
-        container.parentNode.removeChild(container);
-    } else {
-        getCities()
-            .then(function (response) {
-                createCitiesTable(response);
-            })
-            .catch(function (response) {
-                showAlertModal(errorsObj[response.message]);
-            });
-    }
+    removeTable();
+    getCities()
+        .then(function (response) {
+            createCitiesTable(response);
+        })
+        .catch(function (response) {
+            showAlertModal(errorsObj[response.message]);
+        });
 }
 
 cityFormClose.onclick = function () {

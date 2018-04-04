@@ -15,7 +15,7 @@ var pass2 = document.getElementById('pass2');
 var role = document.getElementById('role');
 
 var modal = document.getElementById('myModal');
-var span = document.getElementsByClassName('close')[2];
+var span = document.getElementById('modal_close');
 
 var modalAlert = document.getElementById('modalWindow');
 var modalAlertCloseButton = document.getElementById('closeWindow');
@@ -25,6 +25,8 @@ var country = document.getElementById('country');
 var city = document.getElementById('city');
 var school = document.getElementById('school');
 var bio = document.getElementById('bio');
+
+var adminBtn = document.getElementById('to_admin');
 
 var errorsObj = {
     SERVER_CON_ERROR: 'Server connection error',
@@ -261,6 +263,15 @@ function createTable(usersObj) {
     wrapper.insertBefore(container, showAll);
 }
 
+function removeTable() {
+    var container = document.getElementById('infotable');
+    if (container) {
+        container.parentNode.removeChild(container);
+        return true;
+    }
+    return false;
+}
+
 function showCountriesSelect() {
     return getCountries()
         .then(function (response) {
@@ -310,10 +321,8 @@ saveButton.onclick = function () {
 };
 
 showAll.onclick = function () {
-    var container = document.getElementById('infotable');
-    if (container) {
-        container.parentNode.removeChild(container);
-    } else {
+    var flag = removeTable();
+    if (!flag) {
         updateTable()
             .then(function (response) {
                 createTable(response);

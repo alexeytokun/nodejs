@@ -1,7 +1,8 @@
-function logOut() { // переписать для админа
-    var elem;
-    if (document.getElementById('infotable')) {
-        elem = document.getElementById('infotable');
-        elem.parentNode.removeChild(elem);
-    }
+function logOut() {
+    window.location.replace('index.html');
 }
+
+adminBtn.onclick = function () {
+    window.location.replace('index.html');
+}
+
