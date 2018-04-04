@@ -4,7 +4,8 @@ var dbSchoolObj = require('../db/school');
 var errorsObj = require('../config/errors');
 
 function validate(data) {
-    return true;
+    var regex = /^[ 0-9а-яА-ЯёЁa-zA-Z\-]{1,30}$/;
+    return regex.test(data.schoolname);
 }
 
 function isAdmin(req, res, next) {

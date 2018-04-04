@@ -4,7 +4,8 @@ var dbInfoObj = require('../db/country');
 var errorsObj = require('../config/errors');
 
 function validate(data) {
-    return true;
+    var regex = /^[а-яА-ЯёЁa-zA-Z-]{1,30}$/;
+    return regex.test(data.name);
 }
 
 function isAdmin(req, res, next) {
