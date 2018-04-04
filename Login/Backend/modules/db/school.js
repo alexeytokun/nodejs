@@ -25,7 +25,7 @@ var dbSchoolObj = {};
 
 dbSchoolObj.getAllSchools = function () {
     // var sql = 'SELECT ' + schoolsFields + ' FROM `schools` WHERE `city_id` = ?';
-    var sql = 'SELECT s.school_id, s.name, c.name AS city FROM schools AS s JOIN schools_to_cities AS stc ON s.school_id = stc.school_id LEFT JOIN cities AS c ON c.city_id = stc.city_id';
+    var sql = 'SELECT s.school_id, s.name, c.name AS city, c.city_id AS city_id FROM schools AS s JOIN schools_to_cities AS stc ON s.school_id = stc.school_id LEFT JOIN cities AS c ON c.city_id = stc.city_id';
     var prop = '';
     return query(sql, prop);
 };
@@ -77,6 +77,22 @@ dbSchoolObj.updateSchool = function (id, data) {
             throw ({ status: result.status, message: result.message });
         });
 };
+
+dbSchoolObj.updateSchootToCity = function (school_id, city_id, old_city_id) {
+    var sql = 'UPDATE `schools_to_cities` SET `city_id`=? WHERE `school_id`=? AND `city_id`=?';
+    var prop = [city_id, school_id, old_city_id];
+
+    return query(sql, prop)
+        .then(function (result) {
+            if (result.affectedRows !== 0) {
+                return ({ status: 200, message: 'School data updated' });
+            }
+            return ({ status: 400, message: errorsObj.WRONG_ID });
+        })
+        .catch(function (result) {
+            throw ({ status: result.status, message: result.message });
+        });
+}
 
 dbSchoolObj.deleteSchool = function (id) {
     var sql = 'DELETE FROM `schools` WHERE `school_id` = ?';

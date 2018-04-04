@@ -167,9 +167,10 @@ function createSchoolsTable(schoolsObj) {
     schoolsObj.forEach(function (element) {
         if (element !== null) {
             var tr = document.createElement('tr');
+            var oldCity = element.city_id;
             tr.innerHTML = '<td>Name: ' + element.name + '</td>' +
                 '<td>City: ' + element.city + '</td>' +
-                '<td><button class="edit">Edit</button>' +
+                '<td><button class="edit" data-id=' + oldCity + '>Edit</button>' +
                 '<button class="del">Delete</button>';
             tr.setAttribute('id', element.school_id);
             table.appendChild(tr);
@@ -182,6 +183,8 @@ function createSchoolsTable(schoolsObj) {
 
     container.onclick = function (event) {
         var target = event.target;
+        var oldCity = event.target.dataset.id; // use in delete
+        console.log(oldCity);
         var targetId = +target.parentNode.parentNode.getAttribute('id');
 
         if (target.className === 'del') {
@@ -234,7 +237,7 @@ function createSchoolsTable(schoolsObj) {
         }
 
         if (target.className === 'edit') {
-            editSchool(targetId);
+            editSchool(targetId, oldCity);
         }
     };
 
