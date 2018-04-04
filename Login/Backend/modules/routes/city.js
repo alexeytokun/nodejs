@@ -15,13 +15,12 @@ function isAdmin(req, res, next) {
 }
 
 router.get('/', function (req, res, next) {
-    var id = req.params.id;
-    dbCityObj.getAllCities(id)
+    dbCityObj.getAllCities()
         .then(function (result) {
             if (result.length) {
                 res.json(result);
             } else {
-                res.status(400).json({ message: errorsObj.WRONG_ID });
+                res.status(400).json({ message: errorsObj.NO_CITIES });
             }
         })
         .catch(function (result) {
@@ -36,7 +35,7 @@ router.get('/country/:id', function (req, res, next) {
             if (result.length) {
                 res.json(result);
             } else {
-                res.status(400).json({ message: errorsObj.WRONG_ID });
+                res.status(400).json({ message: errorsObj.NO_CITIES });
             }
         })
         .catch(function (result) {

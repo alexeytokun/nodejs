@@ -38,13 +38,17 @@ var errorsObj = {
     USERNAME_ERROR: 'Not unique username',
     TOKEN_TIME_ERROR: 'Relogin, please',
     VALIDATION_ERROR: 'Validation error',
-    NO_USERS_ERROR: 'No users created'
+    NO_USERS_ERROR: 'No users created',
+    NO_CITIES_ERROR: 'No cities',
+    NO_SCHOOLS_ERROR: 'No schools',
+    NO_COUNTRIES_ERROR: 'No countries'
 };
 
 function validate() {
     return username.checkValidity() && surname.checkValidity() &&
     age.checkValidity() && pass.checkValidity() &&
-    pass2.checkValidity() && (pass.value === pass2.value);
+    pass2.checkValidity() && (pass.value === pass2.value) &&
+    !!country.value && !!city.value && !!school.value && (/^[\w .'"?!:;,-]*$/g.test(bio.value));
 }
 
 function showAlertModal(info) {

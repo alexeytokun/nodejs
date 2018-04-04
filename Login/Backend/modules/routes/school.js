@@ -20,7 +20,7 @@ router.get('/', function (req, res, next) {
             if (result.length) {
                 res.json(result);
             } else {
-                res.status(400).json({ message: errorsObj.WRONG_ID });
+                res.status(400).json({ message: errorsObj.NO_SCHOOLS });
             }
         })
         .catch(function (result) {
@@ -35,7 +35,7 @@ router.get('/city/:id', function (req, res, next) {
             if (result.length) {
                 res.json(result);
             } else {
-                res.status(400).json({ message: errorsObj.WRONG_ID });
+                res.status(400).json({ message: errorsObj.NO_SCHOOLS });
             }
         })
         .catch(function (result) {

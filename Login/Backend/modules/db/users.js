@@ -77,8 +77,9 @@ dbObj.deleteUser = function (id) {
 };
 
 dbObj.updateUserData = function (id, data) {
-    var sql = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=? WHERE id=?';
-    var prop = [data.username, data.surname, data.age, data.role, data.pass, id];
+    var sql = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=?,`country_id`=?, `city_id`=?, `school_id`=?, `bio`=? WHERE id=?';
+    var prop = [data.username, data.surname, data.age, data.role, data.pass,
+        data.country, data.city, data.school, data.bio, id];
     return query(sql, prop)
         .then(function (result) {
             if (result.affectedRows !== 0) {
