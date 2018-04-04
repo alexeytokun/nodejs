@@ -1,10 +1,9 @@
 var mainUrl = 'http://127.0.0.1:8000';
-var authHeader;
+var authHeader = sessionStorage.getItem('token');
 
 var wrapper = document.getElementById('wrapper');
 var saveButton = document.getElementById('save');
 var newUserButton = document.getElementById('createuser');
-var showSignIn = document.getElementById('showsignin');
 var showAll = document.getElementById('showall');
 
 var userForm = document.getElementById('userform');
@@ -17,15 +16,6 @@ var role = document.getElementById('role');
 
 var modal = document.getElementById('myModal');
 var span = document.getElementsByClassName('close')[2];
-var spanSignIn = document.getElementsByClassName('close')[0];
-
-var signIn = document.getElementById('signin');
-var signInButton = document.getElementById('si_save');
-var siUsername = document.getElementById('si_username');
-var siPassword = document.getElementById('si_password');
-
-var signInSwitch = document.getElementById('si_switch');
-var signUpSwitch = document.getElementById('switch');
 
 var modalAlert = document.getElementById('modalWindow');
 var modalAlertCloseButton = document.getElementById('closeWindow');
@@ -60,25 +50,12 @@ function showAlertModal(info) {
     alertText.innerHTML = info;
 }
 
-function validateSignIn() {
-    return siUsername.checkValidity() && siPassword.checkValidity();
-}
-
 function clearForm() {
     username.value = '';
     surname.value = '';
     age.value = '';
     pass.value = '';
     pass2.value = '';
-}
-
-function logOut() {
-    var elem;
-    if (document.getElementById('infotable')) {
-        elem = document.getElementById('infotable');
-        elem.parentNode.removeChild(elem);
-    }
-    signIn.classList.toggle('show');
 }
 
 function saveUser(user) {
@@ -88,30 +65,6 @@ function saveUser(user) {
         XHR.open('POST', url);
         XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
-        XHR.send(user);
-        XHR.onload = function () {
-            var response = JSON.parse(XHR.response);
-            if (this.status === 200) {
-                resolve(response);
-            } else if (this.status === 401) {
-                logOut();
-                reject(response);
-            } else {
-                reject(response);
-            }
-        };
-        XHR.onerror = function () {
-            reject({ message: 'SERVER_CON_ERROR' });
-        };
-    });
-}
-
-function signInUser(user) {
-    return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/signin';
-        var XHR = new XMLHttpRequest();
-        XHR.open('POST', url);
-        XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         XHR.send(user);
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
@@ -215,6 +168,7 @@ function editUser(id) {
             username.value = response.username;
             surname.value = response.surname;
             age.value = response.age;
+            userForm.setAttribute('action', mainUrl + '/user/' + id);
             showCountriesSelect();
         }).catch(function (response) {
             showAlertModal(errorsObj[response.message]);
@@ -307,78 +261,6 @@ function createTable(usersObj) {
     wrapper.insertBefore(container, showAll);
 }
 
-function getCountries() {
-    return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/country';
-        var XHR = new XMLHttpRequest();
-        XHR.open('GET', url);
-        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
-        XHR.send();
-        XHR.onload = function () {
-            var response = JSON.parse(XHR.response);
-            if (this.status === 200) {
-                resolve(response);
-            } else if (this.status === 401) {
-                logOut();
-                reject(response);
-            } else {
-                reject(response);
-            }
-        };
-        XHR.onerror = function () {
-            reject({ message: 'SERVER_CON_ERROR' });
-        };
-    });
-}
-
-function getCities(id) {
-    return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/city/country/' + id;
-        var XHR = new XMLHttpRequest();
-        XHR.open('GET', url);
-        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
-        XHR.send();
-        XHR.onload = function () {
-            var response = JSON.parse(XHR.response);
-            if (this.status === 200) {
-                resolve(response);
-            } else if (this.status === 401) {
-                logOut();
-                reject(response);
-            } else {
-                reject(response);
-            }
-        };
-        XHR.onerror = function () {
-            reject({ message: 'SERVER_CON_ERROR' });
-        };
-    });
-}
-
-function getSchools(id) {
-    return new Promise(function (resolve, reject) {
-        var url = mainUrl + '/school/city/' + id;
-        var XHR = new XMLHttpRequest();
-        XHR.open('GET', url);
-        XHR.setRequestHeader('User-Auth-Token', String(authHeader));
-        XHR.send();
-        XHR.onload = function () {
-            var response = JSON.parse(XHR.response);
-            if (this.status === 200) {
-                resolve(response);
-            } else if (this.status === 401) {
-                logOut();
-                reject(response);
-            } else {
-                reject(response);
-            }
-        };
-        XHR.onerror = function () {
-            reject({ message: 'SERVER_CON_ERROR' });
-        };
-    });
-}
-
 function showCountriesSelect() {
     return getCountries()
         .then(function (response) {
@@ -427,35 +309,6 @@ saveButton.onclick = function () {
     modal.classList.remove('show');
 };
 
-signInButton.onclick = function () {
-    var userData = 'username=' + siUsername.value + '&pass=' + siPassword.value;
-    if (!validateSignIn()) {
-        showAlertModal(errorsObj.VALIDATION_ERROR);
-        return;
-    }
-
-
-    signInUser(userData)
-        .then(function (response) {
-            signIn.classList.remove('show');
-            // if (response.role === 'admin') {
-            //     window.location.replace('admin.html');
-            //     return;
-            // }
-            authHeader = response.authtoken;
-            sessionStorage.setItem('token', authHeader);
-            return updateTable();
-        })
-        .then(function (response) {
-            createTable(response);
-            siUsername.value = '';
-            siPassword.value = '';
-        })
-        .catch(function (response) {
-            showAlertModal(errorsObj[response.message]);
-        });
-};
-
 showAll.onclick = function () {
     var container = document.getElementById('infotable');
     if (container) {
@@ -475,90 +328,28 @@ newUserButton.onclick = function () {
     showCountriesSelect();
 };
 
-showSignIn.onclick = function () {
-    signIn.classList.toggle('show');
-};
-
 span.onclick = function () {
     modal.classList.remove('show');
     userForm.setAttribute('action', mainUrl + '/user');
     clearForm();
 };
 
-spanSignIn.onclick = function () {
-    signIn.classList.remove('show');
-};
-
-window.onclick = function (event) {
-    if (event.target === modal) {
-        modal.classList.remove('show');
-        userForm.setAttribute('action', mainUrl + '/user');
-        clearForm();
-    }
-
-    if (event.target === signIn) {
-        signIn.classList.remove('show');
-    }
-
-    if (event.target === modalAlert) {
-        modalAlert.classList.remove('show');
-    }
-};
-
-signInSwitch.onclick = function () {
-    showCountriesSelect();
-    modal.classList.toggle('show');
-    signIn.classList.toggle('show');
-};
-
-signUpSwitch.onclick = function () {
-    modal.classList.toggle('show');
-    signIn.classList.toggle('show');
-};
+// window.onclick = function (event) {
+//     if (event.target === modal) {
+//         modal.classList.remove('show');
+//         userForm.setAttribute('action', mainUrl + '/user');
+//         clearForm();
+//     }
+//
+//     if (event.target === signIn) {
+//         signIn.classList.remove('show');
+//     }
+//
+//     if (event.target === modalAlert) {
+//         modalAlert.classList.remove('show');
+//     }
+// };
 
 modalAlertCloseButton.onclick = function () {
     modalAlert.classList.remove('show');
 };
-
-country.onchange = function (event) {
-    if (+event.target.value === 0) {
-        city.innerHTML = '<option value="0">Select City</option>';
-        school.innerHTML = '<option value="0">Select School</option>';
-        return;
-    }
-    getCities(country.value)
-        .then(function (response) {
-            city.innerHTML = '<option value="0">Select City</option>';
-            response.forEach(function (element) {
-                var opt = document.createElement('option');
-                opt.setAttribute('value', String(element.city_id));
-                opt.innerHTML = element.name;
-                city.appendChild(opt);
-            });
-            school.innerHTML = '<option value="0">Select School</option>';
-        })
-        .catch(function (response) {
-            showAlertModal(errorsObj[response.message]);
-        });
-}
-
-city.onchange = function (event) {
-    if (+event.target.value === 0) {
-        school.innerHTML = '<option value="0">Select School</option>';
-        return;
-    }
-    getSchools(city.value)
-
-        .then(function (response) {
-            school.innerHTML = '<option value="0">Select School</option>';
-            response.forEach(function (element) {
-                var opt = document.createElement('option');
-                opt.setAttribute('value', String(element.school_id));
-                opt.innerHTML = element.name;
-                school.appendChild(opt);
-            });
-        })
-        .catch(function (response) {
-            showAlertModal(errorsObj[response.message]);
-        });
-}
