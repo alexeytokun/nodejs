@@ -303,6 +303,8 @@ saveButton.onclick = function () {
         return;
     }
 
+    console.log(user);
+
 
     saveUser(user).then(function () {
         if (document.getElementById('infotable')) {
