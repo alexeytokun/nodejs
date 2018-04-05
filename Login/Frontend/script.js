@@ -125,7 +125,6 @@ function getUserInfo(id, flag) {
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
-                console.log(response);
                 resolve(response);
             } else if (this.status === 401) {
                 logOut();
@@ -308,9 +307,6 @@ saveButton.onclick = function () {
         showAlertModal(errorsObj.VALIDATION_ERROR);
         return;
     }
-
-    console.log(user);
-
 
     saveUser(user).then(function () {
         if (document.getElementById('infotable')) {

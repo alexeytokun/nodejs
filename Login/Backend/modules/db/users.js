@@ -77,7 +77,6 @@ dbObj.deleteUser = function (id) {
             return ({ status: 400, message: errorsObj.WRONG_ID });
         })
         .catch(function (result) {
-            console.log('rej' + result);
             throw ({ status: result.status, message: result.message });
         });
 };
