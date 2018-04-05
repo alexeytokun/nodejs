@@ -170,7 +170,7 @@ function createSchoolsTable(schoolsObj) {
             var tr = document.createElement('tr');
             var oldCity = element.city_id;
             tr.innerHTML = '<td>Name: ' + element.name + '</td>' +
-                '<td>City: ' + element.city + '</td>' +
+                '<td>City: ' + (element.city || 'No City') + '</td>' +
                 '<td><button class="edit" data-id=' + oldCity + '>Edit</button>' +
                 '<button class="del">Delete</button>';
             tr.setAttribute('id', element.school_id);

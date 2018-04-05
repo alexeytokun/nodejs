@@ -158,10 +158,10 @@ function showUserInfo(user) {
         '<td>Surname: ' + user.surname + '</td>' +
         '<td>Date: ' + user.date + '</td>' +
         '<td>Role: ' + user.role + '</td>';
-    tr2.innerHTML = '<td>Country: ' + (user.country || 'No') + '</td>' +
-        '<td>City: ' + (user.city || 'No') + '</td>' +
-        '<td>School: ' + (user.school || 'No') + '</td>' +
-        '<td>Bio: ' + (user.bio || 'No') + '</td>';
+    tr2.innerHTML = '<td>Country: ' + (user.country || 'No Country') + '</td>' +
+        '<td>City: ' + (user.city || 'No City') + '</td>' +
+        '<td>School: ' + (user.school || 'No School') + '</td>' +
+        '<td>Bio: ' + (user.bio || 'No Bio') + '</td>';
     table.appendChild(tr1);
     table.appendChild(tr2);
 
