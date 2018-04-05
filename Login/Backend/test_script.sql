@@ -50,7 +50,7 @@ CREATE TABLE `users` (
     `id` INT(11) AUTO_INCREMENT,
     `username` VARCHAR(30) COLLATE utf8_bin,
     `surname` VARCHAR(30),
-    `age` TINYINT(3),
+    `age` DATE,
     `role` VARCHAR(15),
     `country_id` INT(11),
     `city_id` INT(11),
@@ -73,25 +73,10 @@ CREATE TABLE `users` (
 );
 
 INSERT INTO `countries` (`name`) VALUES ('Belarus');
-INSERT INTO `countries` (`name`) VALUES ('Russia');
-INSERT INTO `countries` (`name`) VALUES ('Germany');
 
 INSERT INTO `cities` (`name`, `country_id`) VALUES ('Minsk', '1');
-INSERT INTO `cities` (`name`, `country_id`) VALUES ('Brest', '1');
-INSERT INTO `cities` (`name`, `country_id`) VALUES ('Moscow', '2');
-INSERT INTO `cities` (`name`, `country_id`) VALUES ('SPB', '2');
-INSERT INTO `cities` (`name`, `country_id`) VALUES ('Berlin', '3');
 
 INSERT INTO `schools` (`name`) VALUES ('School 1');
-INSERT INTO `schools` (`name`) VALUES ('School 2');
-INSERT INTO `schools` (`name`) VALUES ('School 3');
-INSERT INTO `schools` (`name`) VALUES ('School 4');
 
 INSERT INTO `schools_to_cities` (`school_id`, `city_id`) VALUES ('1', '1');
-INSERT INTO `schools_to_cities` (`school_id`, `city_id`) VALUES ('1', '3');
-INSERT INTO `schools_to_cities` (`school_id`, `city_id`) VALUES ('2', '4');
-INSERT INTO `schools_to_cities` (`school_id`, `city_id`) VALUES ('2', '5');
-INSERT INTO `schools_to_cities` (`school_id`, `city_id`) VALUES ('3', '5');
-INSERT INTO `schools_to_cities` (`school_id`, `city_id`) VALUES ('4', '1');
-INSERT INTO `schools_to_cities` (`school_id`, `city_id`) VALUES ('4', '4');
 

@@ -1,7 +1,6 @@
 var regex = require('./regex');
 
 function validate(data) {
-
     var username = data.username;
     var surname = data.surname;
     var age = data.age;

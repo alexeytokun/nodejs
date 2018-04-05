@@ -243,7 +243,7 @@ function createSchoolsTable(schoolsObj) {
     wrapper.insertBefore(container, showAll);
 }
 
-function validateShoolForm () {
+function validateShoolForm() {
     return schoolName.checkValidity() &&
         !!+schoolCityName.value && !!+schoolCountryName.value;
 }

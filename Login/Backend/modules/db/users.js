@@ -1,7 +1,7 @@
 var uuidv4 = require('uuid/v4');
 var errorsObj = require('../config/errors');
-var usersFields = '`id`, `username`, `surname`, `age`, `role`, `password`';
-var usersInfoFields = '`id`, `username`, `surname`, `age`, `role`';
+var usersFields = '`id`, `username`, `surname`, DATE_FORMAT(age,"%Y%-%m%-%d") AS date, `role`, `password`';
+var usersInfoFields = '`id`, `username`, `surname`, DATE_FORMAT(age,"%Y%-%m%-%d") AS date, `role`, `bio`';
 var tokensFields = '`id`, `uuid`, `timestamp`';
 var pool = require('../config/connection').pool;
 
@@ -31,7 +31,8 @@ function countTimestamp(min) {
 }
 
 dbObj.addUserToDb = function (username, surname, age, pass, role, country, city, school, bio) {
-    var sql = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`, `country_id`, `city_id`, `school_id`, `bio`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    var sql = 'INSERT INTO `users` (`username`, `surname`, `age`, `role`, `password`, `country_id`, `city_id`,' +
+        ' `school_id`, `bio`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
     var userData = [username, surname, age, role, pass, country, city, school, bio];
     return query(sql, userData);
 };
@@ -54,7 +55,11 @@ dbObj.checkUsername = function (name) {
 };
 
 dbObj.getUserById = function (id) {
-    var sql = 'SELECT ' + usersFields + ' FROM `users` WHERE `id` = ?';
+    // var sql = 'SELECT ' + usersFields + ' FROM `users` WHERE `id` = ?';
+    var sql = 'SELECT ' + usersInfoFields + ', co.name AS country, ci.name AS city,' +
+        ' sc.name AS school FROM `users` AS u LEFT JOIN `countries` AS co ON (u.country_id = co.country_id)' +
+        ' LEFT JOIN `cities` AS ci ON (u.city_id = ci.city_id) LEFT JOIN `schools` AS sc' +
+        ' ON (u.school_id = sc.school_id) WHERE u.id = ?;'
     var prop = id;
 
     return query(sql, prop);
@@ -78,7 +83,8 @@ dbObj.deleteUser = function (id) {
 };
 
 dbObj.updateUserData = function (id, data) {
-    var sql = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=?,`country_id`=?, `city_id`=?, `school_id`=?, `bio`=? WHERE id=?';
+    var sql = 'UPDATE `users` SET `username`=?, `surname`=?, `age`=?, `role`=?, `password`=?,`country_id`=?, ' +
+        '`city_id`=?, `school_id`=?, `bio`=? WHERE id=?';
     var prop = [data.username, data.surname, data.age, data.role, data.pass,
         data.country, data.city, data.school, data.bio, id];
     return query(sql, prop)

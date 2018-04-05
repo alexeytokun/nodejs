@@ -4,5 +4,5 @@ function logOut() {
 
 adminBtn.onclick = function () {
     window.location.replace('index.html');
-}
+};
 

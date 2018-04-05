@@ -9,7 +9,7 @@ var showAll = document.getElementById('showall');
 var userForm = document.getElementById('userform');
 var username = document.getElementById('username');
 var surname = document.getElementById('surname');
-var age = document.getElementById('age');
+var date = document.getElementById('age');
 var pass = document.getElementById('pass');
 var pass2 = document.getElementById('pass2');
 var role = document.getElementById('role');
@@ -46,7 +46,7 @@ var errorsObj = {
 
 function validate() {
     return username.checkValidity() && surname.checkValidity() &&
-    age.checkValidity() && pass.checkValidity() &&
+    date.checkValidity() && pass.checkValidity() &&
     pass2.checkValidity() && (pass.value === pass2.value) &&
     !!+country.value && !!+city.value && !!+school.value && (/^[\w .'"?!:;,-]*$/g.test(bio.value));
 }
@@ -59,7 +59,7 @@ function showAlertModal(info) {
 function clearForm() {
     username.value = '';
     surname.value = '';
-    age.value = '';
+    date.value = '';
     pass.value = '';
     pass2.value = '';
 }
@@ -125,6 +125,7 @@ function getUserInfo(id, flag) {
         XHR.onload = function () {
             var response = JSON.parse(XHR.response);
             if (this.status === 200) {
+                console.log(response);
                 resolve(response);
             } else if (this.status === 401) {
                 logOut();
@@ -140,12 +141,12 @@ function getUserInfo(id, flag) {
 }
 
 function showUserInfo(user) {
-    console.log(user);
     var modalDiv = document.createElement('div');
     var container = document.createElement('div');
     var closeSpan = document.createElement('span');
     var table = document.createElement('table');
-    var tr = document.createElement('tr');
+    var tr1 = document.createElement('tr');
+    var tr2 = document.createElement('tr');
 
     modalDiv.classList.add('modal');
     container.setAttribute('id', 'userinfo');
@@ -153,12 +154,16 @@ function showUserInfo(user) {
     container.classList.add('modal-info');
     closeSpan.innerHTML = '&times;';
     container.appendChild(closeSpan).classList.add('close');
-    tr.innerHTML = '<td>Name: ' + user.username + '</td>' +
+    tr1.innerHTML = '<td>Name: ' + user.username + '</td>' +
         '<td>Surname: ' + user.surname + '</td>' +
-        '<td>Age: ' + user.age + '</td>' +
+        '<td>Date: ' + user.date + '</td>' +
         '<td>Role: ' + user.role + '</td>';
-    tr.setAttribute('id', user.id);
-    table.appendChild(tr);
+    tr2.innerHTML = '<td>Country: ' + (user.country || 'No') + '</td>' +
+        '<td>City: ' + (user.city || 'No') + '</td>' +
+        '<td>School: ' + (user.school || 'No') + '</td>' +
+        '<td>Bio: ' + (user.bio || 'No') + '</td>';
+    table.appendChild(tr1);
+    table.appendChild(tr2);
 
     container.appendChild(table);
     modalDiv.appendChild(container);
@@ -174,7 +179,7 @@ function editUser(id) {
         .then(function (response) {
             username.value = response.username;
             surname.value = response.surname;
-            age.value = response.age;
+            date.value = response.date;
             userForm.setAttribute('action', mainUrl + '/user/' + id);
             showCountriesSelect();
         }).catch(function (response) {
@@ -295,7 +300,7 @@ function showCountriesSelect() {
 }
 
 saveButton.onclick = function () {
-    var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + age.value +
+    var user = 'username=' + username.value + '&surname=' + surname.value + '&age=' + date.value +
     '&pass=' + pass.value + '&role=' + role.value + '&country=' + country.value + '&city=' + city.value +
     '&school=' + school.value + '&bio=' + bio.value;
 
