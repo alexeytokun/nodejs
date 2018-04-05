@@ -53,7 +53,6 @@ dbSchoolObj.addSchool = function (school, city) {
         .then(function (result) {
             var newSql = 'INSERT INTO `schools_to_cities` (`school_id`, `city_id`) VALUES (?, ?)';
             var newProp = [result.insertId, cityId];
-            console.log(newProp);
             return query(newSql, newProp);
         })
         .catch(function (result) {
@@ -63,13 +62,15 @@ dbSchoolObj.addSchool = function (school, city) {
 
 dbSchoolObj.updateSchool = function (id, data) {
     var sql = 'UPDATE `schools` SET `name`=? WHERE `school_id`=?';
-    var prop = [data.schoolname, id];
-    var cityId = data.schoolname;
+    var prop = [data.schoolname, +id];
+    var cityId = data.cityname;
+    var oldCityId = data.oldcityname;
 
     return query(sql, prop)
         .then(function (result) {
             if (result.affectedRows !== 0) {
-                return ({ status: 200, message: 'School data updated' });
+                return dbSchoolObj.updateSchootToCity(id, cityId, oldCityId);
+                // return ({ status: 200, message: 'School data updated' });
             }
             return ({ status: 400, message: errorsObj.WRONG_ID });
         })
@@ -80,7 +81,7 @@ dbSchoolObj.updateSchool = function (id, data) {
 
 dbSchoolObj.updateSchootToCity = function (school_id, city_id, old_city_id) {
     var sql = 'UPDATE `schools_to_cities` SET `city_id`=? WHERE `school_id`=? AND `city_id`=?';
-    var prop = [city_id, school_id, old_city_id];
+    var prop = [+city_id, +school_id, +old_city_id];
 
     return query(sql, prop)
         .then(function (result) {
@@ -106,7 +107,6 @@ dbSchoolObj.deleteSchool = function (id) {
             return ({ status: 400, message: errorsObj.WRONG_ID });
         })
         .catch(function (result) {
-            console.log('rej' + result);
             throw ({ status: result.status, message: result.message });
         });
 };

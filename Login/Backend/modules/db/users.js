@@ -1,6 +1,7 @@
 var uuidv4 = require('uuid/v4');
 var errorsObj = require('../config/errors');
 var usersFields = '`id`, `username`, `surname`, `age`, `role`, `password`';
+var usersInfoFields = '`id`, `username`, `surname`, `age`, `role`';
 var tokensFields = '`id`, `uuid`, `timestamp`';
 var pool = require('../config/connection').pool;
 
@@ -161,7 +162,14 @@ dbObj.deleteUnusedToken = function (id) {
 dbObj.getRole = function (uuid) {
     var sql = 'SELECT `role` FROM `users` AS u JOIN `tokens` AS t WHERE t.uuid = ? AND u.id = t.id';
     var prop = uuid;
-    return query(sql, prop);
+    return query(sql, prop)
+        .then(function (results) {
+            if (results.length) return results;
+            throw ({ status: 403, message: errorsObj.ACCESS_DENIED });
+        })
+        .catch(function (result) {
+            throw ({ status: result.status, message: result.message });
+        });
 };
 
 module.exports = dbObj;

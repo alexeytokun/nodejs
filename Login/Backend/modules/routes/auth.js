@@ -42,7 +42,7 @@ router.use(function (req, res, next) {
                 return dbObj.deleteToken(results[0].id);
             })
             .then(function (result) {
-                if (result) {
+                if (result.length) {
                     body.token = result[0].role;
                     body.IdToken = result[0].id;
                 }
@@ -55,7 +55,9 @@ router.use(function (req, res, next) {
                 body.token = 'anon';
                 return res.status(result.status).json({ message: result.message });
             });
-    } else return next();
+    } else {
+        return next();
+    }
 });
 
 module.exports = router;

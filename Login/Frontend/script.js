@@ -48,7 +48,7 @@ function validate() {
     return username.checkValidity() && surname.checkValidity() &&
     age.checkValidity() && pass.checkValidity() &&
     pass2.checkValidity() && (pass.value === pass2.value) &&
-    !!country.value && !!city.value && !!school.value && (/^[\w .'"?!:;,-]*$/g.test(bio.value));
+    !!+country.value && !!+city.value && !!+school.value && (/^[\w .'"?!:;,-]*$/g.test(bio.value));
 }
 
 function showAlertModal(info) {
@@ -140,6 +140,7 @@ function getUserInfo(id, flag) {
 }
 
 function showUserInfo(user) {
+    console.log(user);
     var modalDiv = document.createElement('div');
     var container = document.createElement('div');
     var closeSpan = document.createElement('span');

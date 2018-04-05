@@ -86,10 +86,11 @@ function getSchool(id) {
     });
 }
 
-function editSchool(id) {
+function editSchool(id, oldCityId) {
+    var table = document.getElementById('infotable');
+    table.dataset.oldid = oldCityId;
     getSchool(id)
         .then(function (response) {
-            console.log(response);
             schoolName.value = response.name;
             getCountries()
                 .then(function (response) {
@@ -183,8 +184,6 @@ function createSchoolsTable(schoolsObj) {
 
     container.onclick = function (event) {
         var target = event.target;
-        var oldCity = event.target.dataset.id; // use in delete
-        console.log(oldCity);
         var targetId = +target.parentNode.parentNode.getAttribute('id');
 
         if (target.className === 'del') {
@@ -237,11 +236,16 @@ function createSchoolsTable(schoolsObj) {
         }
 
         if (target.className === 'edit') {
-            editSchool(targetId, oldCity);
+            editSchool(targetId, target.dataset.id);
         }
     };
 
     wrapper.insertBefore(container, showAll);
+}
+
+function validateShoolForm () {
+    return schoolName.checkValidity() &&
+        !!+schoolCityName.value && !!+schoolCountryName.value;
 }
 
 showSchools.onclick = function () {
@@ -256,17 +260,22 @@ showSchools.onclick = function () {
 }
 
 schoolFormClose.onclick = function () {
+    var table = document.getElementById('infotable');
     schoolModal.classList.remove('show');
     schoolForm.setAttribute('action', mainUrl + '/school');
+    if (table.dataset.oldid) delete table.dataset.oldid;
 }
 
 schoolSave.onclick = function () {
+    var table = document.getElementById('infotable');
     var schoolData = 'schoolname=' + schoolName.value + '&cityname=' + schoolCityName.value;
-    console.log(schoolData);
-    // if (!validate()) {
-    //     showAlertModal(errorsObj.VALIDATION_ERROR);
-    //     return;
-    // }
+    if (table.dataset.oldid) {
+        schoolData = schoolData + '&oldcityname=' + table.dataset.oldid;
+    }
+    if (!validateShoolForm()) {
+        showAlertModal(errorsObj.VALIDATION_ERROR);
+        return;
+    }
     addSchool(schoolData).then(function () {
         if (document.getElementById('infotable')) {
             getSchools()

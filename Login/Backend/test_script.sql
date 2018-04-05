@@ -61,15 +61,15 @@ CREATE TABLE `users` (
     FOREIGN KEY(`country_id`)
     		REFERENCES `countries`(`country_id`)
             ON UPDATE CASCADE
-            ON DELETE CASCADE,
+            ON DELETE SET NULL,
     FOREIGN KEY(`city_id`)
     		REFERENCES `cities`(`city_id`)
             ON UPDATE CASCADE
-            ON DELETE CASCADE,
+            ON DELETE SET NULL,
     FOREIGN KEY(`school_id`)
         	REFERENCES `schools`(`school_id`)
             ON UPDATE CASCADE
-            ON DELETE CASCADE
+            ON DELETE SET NULL
 );
 
 INSERT INTO `countries` (`name`) VALUES ('Belarus');
