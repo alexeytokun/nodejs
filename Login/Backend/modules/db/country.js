@@ -78,4 +78,21 @@ dbCountryObj.deleteCountry = function (id) {
         });
 };
 
+dbCountryObj.isUnique = function (name, id) {
+    return dbCountryObj.checkCountryname(name)
+        .then(function (results) {
+            if (!results.length || (+results[0].id === +id)) return;
+            throw ({ status: 406, message: errorsObj.USERNAME });
+        })
+        .catch(function (result) {
+            throw ({ status: result.status, message: result.message });
+        });
+};
+
+dbCountryObj.checkCountryname = function (name) {
+    var sql = 'SELECT `country_id` FROM `countries` WHERE `name` = ?';
+    var prop = [name];
+    return query(sql, prop);
+};
+
 module.exports = dbCountryObj;

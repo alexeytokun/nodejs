@@ -2,7 +2,6 @@ var errorsObj = require('../config/errors');
 var citiesFields = '`city_id`, `name`, `country_id`';
 var pool = require('../config/connection').pool;
 
-
 var query = function (sql, props) {
     return new Promise(function (resolve, reject) {
         pool.getConnection(function (err, connection) {

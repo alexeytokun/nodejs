@@ -35,7 +35,7 @@ var errorsObj = {
     DB_QUERY_ERROR: 'Database query error',
     AUTH_ERROR: 'Wrong username or password',
     WRONG_ID_ERROR: 'Wrong user id',
-    USERNAME_ERROR: 'Not unique username',
+    USERNAME_ERROR: 'Not unique name',
     TOKEN_TIME_ERROR: 'Relogin, please',
     VALIDATION_ERROR: 'Validation error',
     NO_USERS_ERROR: 'No users created',
