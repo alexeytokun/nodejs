@@ -29,6 +29,20 @@ router.get('/', function (req, res, next) {
         });
 });
 
+router.get('/countries', isAdmin, function (req, res, next) {
+    dbInfoObj.getCountries()
+        .then(function (result) {
+            if (result.length) {
+                res.json(result);
+            } else {
+                res.status(400).json({ message: errorsObj.NO_COUNTRIES });
+            }
+        })
+        .catch(function (result) {
+            res.status(result.status).json({ message: result.message });
+        });
+});
+
 router.get('/:id', isAdmin, function (req, res, next) {
     var id = req.params.id;
     dbInfoObj.getCountry(id)

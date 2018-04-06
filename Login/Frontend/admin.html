@@ -34,7 +34,7 @@
             <select name="city" id="city"></select>
             <select name="school" id="school"></select>
             <textarea name="bio" id="bio" cols="30" rows="5" placeholder="Tell about yourself..."></textarea>
-            <input id="save" type="button" value="Save">
+            <input id="save" class="save" type="button" value="Save">
         </form>
     </div>
 
@@ -42,7 +42,7 @@
         <form action="http://127.0.0.1:8000/country" method="post" id="country_form" autocomplete="off" class='modal-content'>
             <span id="country_close" class="close">&times;</span>
             <input id="country_countryname" name="countryname" type="text" placeholder="Name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
-            <input id="country_save" type="button" value="Save">
+            <input id="country_save" class="save" type="button" value="Save">
         </form>
     </div>
 
@@ -51,7 +51,7 @@
             <span id="city_close" class="close">&times;</span>
             <input id="city_cityname" name="cityname" type="text" placeholder="City name" pattern="[а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
             <select id="city_countryname" name="countryname"></select>
-            <input id="city_save" type="button" value="Save">
+            <input id="city_save" class="save" type="button" value="Save">
         </form>
     </div>
 
@@ -61,7 +61,7 @@
             <input id="school_schoolname" name="schoolname" type="text" placeholder="School name" pattern="[ 0-9а-яА-ЯёЁa-zA-Z\-]{1,30}" required>
             <select id="school_countryname" name="countryname"></select>
             <select id="school_cityname" name="cityname"></select>
-            <input id="school_save" type="button" value="Save">
+            <input id="school_save" class="save" type="button" value="Save">
         </form>
     </div>
 

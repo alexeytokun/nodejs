@@ -6,10 +6,11 @@ var countryName = document.getElementById('country_countryname');
 var countrySave = document.getElementById('country_save');
 var countryFormClose = document.getElementById('country_close');
 
-function getCountries() {
+function getCountries(flag) {
     return new Promise(function (resolve, reject) {
         var url = mainUrl + '/country';
         var XHR = new XMLHttpRequest();
+        if (flag) url = mainUrl + '/country/countries';
         XHR.open('GET', url);
         XHR.setRequestHeader('User-Auth-Token', String(authHeader));
         XHR.send();
@@ -193,7 +194,7 @@ country.onchange = function (event) {
 
 showCountires.onclick = function () {
     removeTable();
-    getCountries()
+    getCountries(true)
         .then(function (response) {
             createCountriesTable(response);
         })

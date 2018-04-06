@@ -15,7 +15,7 @@ function isAdmin(req, res, next) {
     return next();
 }
 
-router.get('/', function (req, res, next) {
+router.get('/', isAdmin, function (req, res, next) {
     dbCityObj.getAllCities()
         .then(function (result) {
             if (result.length) {

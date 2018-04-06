@@ -127,5 +127,14 @@ input[type='button'] {
 .btn-wrapper {
     display: flex;
 }
+
+.new,
+.del,
+.edit,
+.info,
+.delete,
+.save {
+    padding: 5px;
+}
   
 
