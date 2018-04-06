@@ -98,7 +98,6 @@ dbCityObj.isUnique = function (name, countryname, id) {
 dbCityObj.checkCityname = function (name, countryname) {
     var sql = 'SELECT `city_id` FROM `cities` WHERE `name` = ? AND country_id = ?';
     var prop = [name, countryname];
-    console.log(prop);
     return query(sql, prop);
 };
 

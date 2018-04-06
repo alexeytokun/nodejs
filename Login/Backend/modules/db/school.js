@@ -115,4 +115,21 @@ dbSchoolObj.deleteSchool = function (id) {
         });
 };
 
+dbSchoolObj.isUnique = function (schoolname, cityname, id) {
+    return dbSchoolObj.checkCityname(schoolname, cityname)
+        .then(function (results) {
+            if (!results.length || (+results[0].school_id === +id)) return;
+            throw ({ status: 406, message: errorsObj.USERNAME });
+        })
+        .catch(function (result) {
+            throw ({ status: result.status, message: result.message });
+        });
+};
+
+dbSchoolObj.checkCityname = function (schoolname, cityname) {
+    var sql = 'SELECT s.school_id FROM `schools_to_cities` AS stc LEFT JOIN `schools` AS s ON (stc.school_id = s.school_id) WHERE s.name = ? AND stc.city_id = ?';
+    var prop = [schoolname, cityname];
+    return query(sql, prop);
+};
+
 module.exports = dbSchoolObj;

@@ -59,7 +59,15 @@ router.get('/:id', isAdmin, function (req, res, next) {
         });
 });
 
-router.post('/', isAdmin, function (req, res, next) { //add isUnique check
+router.post('/', isAdmin, function (req, res, next) {
+    dbSchoolObj.isUnique(req.body.schoolname, req.body.cityname)
+        .then(function () {
+            next();
+        })
+        .catch(function (result) {
+            return res.status(result.status).json({ message: result.message });
+        });
+}, function (req, res, next) { //add isUnique check
     if (validate(req.body)) {
         dbSchoolObj.addSchool(req.body.schoolname, req.body.cityname)
             .then(function (result) {
@@ -73,7 +81,15 @@ router.post('/', isAdmin, function (req, res, next) { //add isUnique check
     res.status(406).json({ message: errorsObj.VALIDATION });
 });
 
-router.post('/:id', isAdmin, function (req, res, next) { //add isUnique check
+router.post('/:id', isAdmin, function (req, res, next) {
+    dbSchoolObj.isUnique(req.body.schoolname, req.body.cityname, req.params.id)
+        .then(function () {
+            next();
+        })
+        .catch(function (result) {
+            return res.status(result.status).json({ message: result.message });
+        });
+}, function (req, res, next) { //add isUnique check
     if (!validate(req.body)) {
         return res.status(406).json({ message: errorsObj.VALIDATION });
     }
