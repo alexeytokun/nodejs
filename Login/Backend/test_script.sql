@@ -46,6 +46,12 @@ CREATE TABLE `schools_to_cities` (
         ON DELETE CASCADE
 );
 
+CREATE TABLE `roles` (
+  `role_id` INT NOT NULL AUTO_INCREMENT,
+  `role_name` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`role_id`)
+ );
+
 CREATE TABLE `users` (
     `id` INT(11) AUTO_INCREMENT,
     `username` VARCHAR(30) COLLATE utf8_bin,

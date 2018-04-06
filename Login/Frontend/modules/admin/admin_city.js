@@ -156,7 +156,7 @@ function createCitiesTable(citiesObj) {
         }
     });
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td><button class="new">Add new</button>';
+    tr.innerHTML = '<td class="new-td"><button class="new">Add new</button>';
     table.appendChild(tr);
     container.appendChild(table);
 
