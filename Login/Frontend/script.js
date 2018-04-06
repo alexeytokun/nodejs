@@ -179,6 +179,7 @@ function editUser(id) {
             username.value = response.username;
             surname.value = response.surname;
             date.value = response.date;
+            bio.value = response.bio;
             userForm.setAttribute('action', mainUrl + '/user/' + id);
             showCountriesSelect();
         }).catch(function (response) {
