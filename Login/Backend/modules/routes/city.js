@@ -82,7 +82,7 @@ router.post('/', isAdmin, function (req, res, next) {
 });
 
 router.post('/:id', isAdmin, function (req, res, next) {
-    dbCityObj.isUnique(req.body.cityname, req.body.countryname)
+    dbCityObj.isUnique(req.body.cityname, req.body.countryname, req.params.id)
         .then(function () {
             next();
         })

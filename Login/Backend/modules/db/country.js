@@ -81,7 +81,7 @@ dbCountryObj.deleteCountry = function (id) {
 dbCountryObj.isUnique = function (name, id) {
     return dbCountryObj.checkCountryname(name)
         .then(function (results) {
-            if (!results.length || (+results[0].id === +id)) return;
+            if (!results.length || (+results[0].country_id === +id)) return;
             throw ({ status: 406, message: errorsObj.USERNAME });
         })
         .catch(function (result) {

@@ -87,7 +87,7 @@ dbCityObj.deleteCity = function (id) {
 dbCityObj.isUnique = function (name, countryname, id) {
     return dbCityObj.checkCityname(name, countryname)
         .then(function (results) {
-            if (!results.length || (+results[0].id === +id)) return;
+            if (!results.length || (+results[0].city_id === +id)) return;
             throw ({ status: 406, message: errorsObj.USERNAME });
         })
         .catch(function (result) {
