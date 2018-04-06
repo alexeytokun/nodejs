@@ -52,7 +52,7 @@ router.post('/', isAdmin, function (req, res, next) {
         .catch(function (result) {
             return res.status(result.status).json({ message: result.message });
         });
-}, function (req, res, next) { //add isUnique check
+}, function (req, res, next) {
     if (validate(req.body)) {
         dbInfoObj.addCountry(req.body.name)
             .then(function (result) {
@@ -74,7 +74,7 @@ router.post('/:id', isAdmin, function (req, res, next) {
         .catch(function (result) {
             return res.status(result.status).json({ message: result.message });
         });
-}, function (req, res, next) { //add isUnique check
+}, function (req, res, next) {
     if (!validate(req.body)) {
         return res.status(406).json({ message: errorsObj.VALIDATION });
     }

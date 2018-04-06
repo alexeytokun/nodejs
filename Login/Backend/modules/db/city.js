@@ -84,4 +84,22 @@ dbCityObj.deleteCity = function (id) {
         });
 };
 
+dbCityObj.isUnique = function (name, countryname, id) {
+    return dbCityObj.checkCityname(name, countryname)
+        .then(function (results) {
+            if (!results.length || (+results[0].id === +id)) return;
+            throw ({ status: 406, message: errorsObj.USERNAME });
+        })
+        .catch(function (result) {
+            throw ({ status: result.status, message: result.message });
+        });
+};
+
+dbCityObj.checkCityname = function (name, countryname) {
+    var sql = 'SELECT `city_id` FROM `cities` WHERE `name` = ? AND country_id = ?';
+    var prop = [name, countryname];
+    console.log(prop);
+    return query(sql, prop);
+};
+
 module.exports = dbCityObj;
